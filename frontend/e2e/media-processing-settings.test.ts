@@ -28,7 +28,10 @@ describe('视频预览设置', () => {
       });
       const { page } = opened;
       try {
-        await page.locator('#videoThumbnailSetting button').click();
+        const timeline = page.locator('#videoThumbnailSetting button');
+        await timeline.scrollIntoViewIfNeeded();
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await timeline.click();
         await page.getByRole('option', { name: 'Custom interval', exact: true }).click();
         await page.getByRole('spinbutton', { name: 'Interval (seconds)', exact: true }).fill('17');
         await page.getByRole('button', { name: 'Apply interval', exact: true }).click();
@@ -38,7 +41,7 @@ describe('视频预览设置', () => {
         await page.getByRole('spinbutton', { name: 'Maximum transcode storage (GiB)', exact: true }).fill('20');
         await page.getByRole('button', { name: 'Save transcode storage', exact: true }).click();
         await page.getByText('Restart Peach to use the selected transcode folder. Existing cache files stay in their current folder.', { exact: true }).waitFor();
-        assert.deepEqual(writes, [{ mode: 'custom', interval_seconds: 17 }, { action: 'set_acceleration', acceleration: 'cuda' }, { folder: '/downloads/peach-cache', max_gb: 20 }]);
+        assert.deepEqual(writes, [{ mode: 'custom', interval_seconds: 17, regeneration: 'upgrade' }, { action: 'set_acceleration', acceleration: 'cuda' }, { folder: '/downloads/peach-cache', max_gb: 20 }]);
         const measured = await layout(page);
         assert.ok(measured.scrollWidth <= measured.viewportWidth, JSON.stringify(measured));
         assert.deepEqual(measured.offenders, []);

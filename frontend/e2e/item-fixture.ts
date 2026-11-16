@@ -187,12 +187,12 @@ export async function openItemPage(browser: Browser, path: string, viewport: Vie
     settings?: Record<string, unknown>; ready?: string; catalogIds?: readonly number[];
   } = {},
 ): Promise<ItemVisit> {
-  const opened = await visit(browser, '/', viewport);
+  let stubbed!: ItemStub;
+  const opened = await visit(browser, '/', viewport, async page => { stubbed = await stub(page, catalogIds) });
   const page = opened.page;
   await page.context().addInitScript((value) => {
     localStorage.setItem('peach.settings.v1', JSON.stringify(value));
   }, { detailAutoplay: false, relatedLimit: 12, ...settings });
-  const stubbed = await stub(page, catalogIds);
   await page.goto(new URL(path, page.url()).toString(), { waitUntil: 'load' });
   await page.locator(ready).first().waitFor({ timeout: 15_000 });
   await settle(page);
