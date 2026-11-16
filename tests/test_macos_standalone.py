@@ -47,6 +47,7 @@ class MacStandaloneDistributionTests(TestCase):
             self.assertEqual(filename, str(destination))
             self.assertEqual(volume_name, "Peach")
             self.assertEqual(settings["filesystem"], "APFS")
+            self.assertEqual(settings["hide_extensions"], [])
             self.assertEqual(settings["files"], [str(app)])
             self.assertEqual(settings["symlinks"], {"Applications": "/Applications"})
             self.assertEqual((resource / "runtime").read_bytes(), b"native executable")

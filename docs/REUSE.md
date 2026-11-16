@@ -80,7 +80,7 @@ JS/TS 文案复用 [Oxc parser](https://oxc.rs/docs/guide/usage/parser)，开发
 
 ## macOS 独立构建
 
-镜像布局复用 MIT 许可的 [`dmgbuild==1.6.7`](https://github.com/dmgbuild/dmgbuild/tree/v1.6.7)，使用 APFS 保留已签名应用的 Unicode 资源文件名。HFS+ 的文件名分解形式会使日文资源与签名清单不一致；Intel macOS 制品验收覆盖挂载、严格签名校验及源码树外启动。APFS 适用于应用支持的 macOS 版本，沿用已有构建依赖，不新增运行时依赖。
+镜像布局复用 MIT 许可的 [`dmgbuild==1.6.7`](https://github.com/dmgbuild/dmgbuild/tree/v1.6.7)，使用 APFS 保留已签名应用的 Unicode 资源文件名，应用保持无 Finder 扩展属性。HFS+ 的文件名分解形式会使日文资源与签名清单不一致，隐藏扩展名产生的 Finder 信息也不符合严格签名校验；Intel macOS 制品验收覆盖挂载、严格签名校验及源码树外启动。APFS 适用于应用支持的 macOS 版本，沿用已有构建依赖，不新增运行时依赖。
 
 独立应用复用项目已有的 PyInstaller 6.22.3（GPL-2.0-or-later，带发行例外），由 macOS 原生 bootloader 承载 Python 3.14 与 Cocoa 菜单栏，资源与 CLI 入口沿用现有桌面实现。镜像使用系统自带的 `hdiutil`，无需新增运行时依赖。构建与签名依据 [PyInstaller macOS 文档](https://www.pyinstaller.org/en/stable/usage.html)和 [Apple 分发文档](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution)。
 
