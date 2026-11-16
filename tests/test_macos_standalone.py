@@ -46,6 +46,7 @@ class MacStandaloneDistributionTests(TestCase):
 
             self.assertEqual(filename, str(destination))
             self.assertEqual(volume_name, "Peach")
+            self.assertEqual(settings["filesystem"], "APFS")
             self.assertEqual(settings["files"], [str(app)])
             self.assertEqual(settings["symlinks"], {"Applications": "/Applications"})
             self.assertEqual((resource / "runtime").read_bytes(), b"native executable")
@@ -85,42 +86,6 @@ class MacStandaloneDistributionTests(TestCase):
         with self.assertRaises(FileNotFoundError):
             self.builder.package_dmg(self.root / "Peach.app", destination)
         self.assertFalse(destination.parent.exists())
-
-    def test_disk_image_seals_the_copied_bundle_and_verifies_its_resources(self):
-        app, _resource = self.bundle()
-        destination = self.root / "release" / "Peach.dmg"
-        mount = self.root / "mounted-image"
-
-        def create_image(filename, _volume_name, *, settings):
-            settings["create_hook"](str(mount), settings)
-            Path(filename).write_bytes(b"verified image")
-
-        with mock.patch.dict(sys.modules, {"dmgbuild": SimpleNamespace(build_dmg=create_image)}), \
-                mock.patch.object(self.builder.subprocess, "run") as run:
-            self.builder.package_dmg(app, destination)
-        copied = str(mount / "Peach.app")
-        self.assertEqual(run.call_args_list, [
-            mock.call(["xattr", "-cr", copied], check=True),
-            mock.call(["codesign", "--force", "--sign", "-", copied], check=True),
-            mock.call(["codesign", "--verify", "--deep", "--strict", "--verbose=4", copied], check=True),
-        ])
-        self.assertEqual(destination.read_bytes(), b"verified image")
-
-    def test_disk_image_rejects_failed_resource_verification(self):
-        import subprocess
-
-        app, _resource = self.bundle()
-        destination = self.root / "release" / "Peach.dmg"
-
-        def create_image(_filename, _volume_name, *, settings):
-            settings["create_hook"](str(self.root / "mounted-image"), settings)
-
-        failure = subprocess.CalledProcessError(1, ["codesign", "--verify"])
-        with mock.patch.dict(sys.modules, {"dmgbuild": SimpleNamespace(build_dmg=create_image)}), \
-                mock.patch.object(self.builder.subprocess, "run", side_effect=[None, None, failure]):
-            with self.assertRaises(subprocess.CalledProcessError):
-                self.builder.package_dmg(app, destination)
-        self.assertFalse(destination.exists())
 
     def test_non_macos_build_is_rejected_before_running_tools(self):
         with mock.patch.object(self.builder.sys, "platform", "win32"), \

@@ -50,14 +50,6 @@ def package_dmg(app: Path, destination: Path) -> Path:
     from dmgbuild import build_dmg
     from resvg_py import svg_to_bytes
 
-    def seal_image_bundle(mount_point: str, _settings: dict) -> None:
-        """以镜像文件系统中的 Unicode 文件名建立最终资源签名。"""
-        copied_app = str(Path(mount_point) / app.name)
-        subprocess.run(["xattr", "-cr", copied_app], check=True)
-        subprocess.run(["codesign", "--force", "--sign", "-", copied_app], check=True)
-        subprocess.run(["codesign", "--verify", "--deep", "--strict", "--verbose=4", copied_app],
-                       check=True)
-
     with tempfile.TemporaryDirectory(prefix="peach-dmg-") as directory:
         staging = Path(directory)
         source = str(ROOT / "resources" / "dmg-background.svg")
@@ -66,8 +58,7 @@ def package_dmg(app: Path, destination: Path) -> Path:
             path = background if scale == 1 else staging / "background@2x.png"
             path.write_bytes(svg_to_bytes(svg_path=source, zoom=scale))
         build_dmg(str(destination), "Peach", settings={
-            "format": "UDZO", "files": [str(app)],
-            "create_hook": seal_image_bundle,
+            "format": "UDZO", "filesystem": "APFS", "files": [str(app)],
             "symlinks": {"Applications": "/Applications"},
             "background": str(background), "window_rect": ((160, 160), (640, 420)),
             "icon_locations": {"Peach.app": (174, 220), "Applications": (466, 220)},
