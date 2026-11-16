@@ -53,6 +53,7 @@ def package_dmg(app: Path, destination: Path) -> Path:
     def seal_image_bundle(mount_point: str, _settings: dict) -> None:
         """以镜像文件系统中的 Unicode 文件名建立最终资源签名。"""
         copied_app = str(Path(mount_point) / app.name)
+        subprocess.run(["xattr", "-cr", copied_app], check=True)
         subprocess.run(["codesign", "--force", "--sign", "-", copied_app], check=True)
         subprocess.run(["codesign", "--verify", "--deep", "--strict", "--verbose=4", copied_app],
                        check=True)

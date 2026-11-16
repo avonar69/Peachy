@@ -100,6 +100,7 @@ class MacStandaloneDistributionTests(TestCase):
             self.builder.package_dmg(app, destination)
         copied = str(mount / "Peach.app")
         self.assertEqual(run.call_args_list, [
+            mock.call(["xattr", "-cr", copied], check=True),
             mock.call(["codesign", "--force", "--sign", "-", copied], check=True),
             mock.call(["codesign", "--verify", "--deep", "--strict", "--verbose=4", copied], check=True),
         ])
@@ -116,7 +117,7 @@ class MacStandaloneDistributionTests(TestCase):
 
         failure = subprocess.CalledProcessError(1, ["codesign", "--verify"])
         with mock.patch.dict(sys.modules, {"dmgbuild": SimpleNamespace(build_dmg=create_image)}), \
-                mock.patch.object(self.builder.subprocess, "run", side_effect=[None, failure]):
+                mock.patch.object(self.builder.subprocess, "run", side_effect=[None, None, failure]):
             with self.assertRaises(subprocess.CalledProcessError):
                 self.builder.package_dmg(app, destination)
         self.assertFalse(destination.exists())
