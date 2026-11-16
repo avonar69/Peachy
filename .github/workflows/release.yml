@@ -349,11 +349,11 @@ jobs:
           cp ../macos-candidates/release/*.dmg .
           tail -n +4 ../macos-candidates/scripts/MACOS_DOWNLOADS.md >> RELEASE_NOTES.md
           sha256sum ./*.zip ./*-setup.exe ./*.dmg > SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" ./*.zip ./*-setup.exe ./*.dmg SHA256SUMS.txt --verify-tag --prerelease --title "Peach $VERSION · Windows / macOS 测试版" --notes-file RELEASE_NOTES.md
+          gh release create "$GITHUB_REF_NAME" ./*.zip ./*-setup.exe ./*.dmg SHA256SUMS.txt --verify-tag --prerelease --title "Peachy $VERSION · Windows / macOS 测试版" --notes-file RELEASE_NOTES.md
 
   project-board:
     name: 同步已发布版本到看板
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' && github.repository_owner == 'peach-mitao'
     needs: release
     runs-on: ubuntu-latest
     timeout-minutes: 5

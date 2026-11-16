@@ -55,8 +55,8 @@ def build(destination: Path, tray: Path) -> Path:
     resources.mkdir(parents=True)
 
     info = {
-        "CFBundleName": "Peach",
-        "CFBundleDisplayName": "Peach 蜜桃",
+        "CFBundleName": "Peachy",
+        "CFBundleDisplayName": "Peachy",
         "CFBundleIdentifier": BUNDLE_ID,
         "CFBundleVersion": __version__,
         "CFBundleShortVersionString": __version__,

@@ -38,6 +38,6 @@ exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="Peach",
 collection = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False, name="Peach")
 app = BUNDLE(collection, name="Peach.app", icon=str(root / "resources" / "peach.icns"),
              bundle_identifier=MACOS_BUNDLE_ID,
-             info_plist={"CFBundleName": "Peach", "CFBundleDisplayName": "Peach 蜜桃",
+             info_plist={"CFBundleName": "Peachy", "CFBundleDisplayName": "Peachy",
                          "CFBundleShortVersionString": version, "CFBundleVersion": version,
                          "LSUIElement": True, "NSHighResolutionCapable": True})

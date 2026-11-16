@@ -2,7 +2,21 @@
   <img src="resources/peach-logo.png" alt="Peach" width="96">
 </p>
 
-<h1 align="center">Peach</h1>
+<h1 align="center">Peachy</h1>
+
+Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), retaining its AGPL-3.0-or-later license and original attribution. This repository’s `master` publishes the custom features below. New upstream changes are reviewed in a separate compatibility PR before inclusion in a release.
+
+## Peachy features
+
+- **Languages and LAN access:** English by default, with Simplified/Traditional Chinese, Vietnamese, Japanese, Korean, German, Spanish, French and Portuguese. Settings, tasks, diagnostics and review screens are localized; LAN connections and ordinary HTTP origins are supported.
+- **StashDB matching and review:** Combines filename, actor folder, studio, release date, duration and optional OSHASH evidence. Includes ignored text, adjustable confidence, quick application of saved scores, recent-media retries, a shared review queue and separate actor/studio/scene resync with manual edits protected.
+- **Actor and studio information:** Actor photos, aliases, biographical details and scene tags; actor merging with backup and undo. Profiles and browsing cards show your average scene rating and thumbs-up/down totals, excluding unrated videos from the average.
+- **Incremental scans and timeline previews:** Find-new is the default; folders have individual scan switches and schedules, with zero hours disabling automatic scans. New videos receive targeted timeline generation with configurable intervals, speed, hardware decoding and cancellation.
+- **Playback:** Browser-aware direct-play negotiation, half-star ratings, resume positions, remembered volume, independent seek steps and shortcuts, mobile double-tap seeking, fullscreen sizing, and optional on-demand previews and performance features.
+- **RSS and downloads:** Illustrated feeds, multiple previews, retained history, deduplication, pagination, feed filters and scheduled/manual refresh. AllDebrid, Real-Debrid, SABnzbd, NZBGet and SABconnect++ support includes download status, speed, completion receipts and optional import after download.
+- **Desktop releases:** Windows x64 installers/portable packages and macOS Apple Silicon/Intel DMGs. Internal package names, data directories, executables and some asset filenames retain `peach`/`Peach` for compatibility with existing installations.
+
+Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](README.md).
 
 Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
 
@@ -21,20 +35,15 @@ Browsing and Playback includes separate, opt-in beta controls for local video bu
 <p align="center">A private video library: local drives, cloud drives and the creators you follow, all in one place.</p>
 
 <p align="center">
-  <a href="https://peach.video">Website</a> ·
-  <a href="https://github.com/peach-mitao/peach/releases">Download installers</a> ·
-  <a href="https://demo.peach.video">Live demo</a> ·
-  <a href="https://github.com/peach-mitao/peach/releases/tag/intro-video">Intro video</a> ·
-  <a href="https://github.com/peach-mitao/peach/issues">Report a problem</a> ·
-  <a href="https://github.com/orgs/peach-mitao/projects/7/views/1">Requests board</a> ·
-  <a href="https://github.com/orgs/peach-mitao/projects/7/views/3">Roadmap</a> ·
+  <a href="https://github.com/avonar69/Peachy/releases">Download installers</a> ·
+  <a href="https://github.com/avonar69/Peachy/issues">Report a problem</a> ·
   <a href="#documentation">Documentation</a> ·
   <a href="README.md">中文</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/peach-mitao/peach/releases"><img src="https://img.shields.io/github/v/release/peach-mitao/peach?include_prereleases&amp;filter=v*&amp;sort=semver&amp;display_name=tag" alt="release"></a>
-  <a href="https://github.com/peach-mitao/peach/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/peach-mitao/peach/test.yml?branch=master&amp;label=tests&amp;logo=githubactions&amp;logoColor=white" alt="CI status"></a>
+  <a href="https://github.com/avonar69/Peachy/releases"><img src="https://img.shields.io/github/v/release/avonar69/Peachy?include_prereleases&amp;filter=v*&amp;sort=semver&amp;display_name=tag" alt="release"></a>
+  <a href="https://github.com/avonar69/Peachy/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/avonar69/Peachy/test.yml?branch=master&amp;label=tests&amp;logo=githubactions&amp;logoColor=white" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0--or--later-blue?logo=gnu&amp;logoColor=white" alt="license"></a>
   <a href="docs/TESTING_DESKTOP.md"><img src="https://img.shields.io/badge/Windows-x64-0078D4" alt="Windows x64"></a>
   <a href="docs/OPERATIONS.md#macos-独立测试包"><img src="https://img.shields.io/badge/macOS-DMG-555555?logo=apple&amp;logoColor=white" alt="Build and install the standalone macOS app"></a>
@@ -54,7 +63,7 @@ https://github.com/user-attachments/assets/a5610874-e611-41bb-be22-7d99f0d64b62
 - **Follow across sites**: combine a creator's updates from FANBOX, Patreon, Kemono and other sites, with matching posts grouped into one card.
 - **Find your next watch**: subscribe to performers' new releases, discover titles based on your taste and save them to your want list.
 - **Cloud download**: search by video code or paste a magnet link, send it to 115 or PikPak and organize the downloaded video into your library automatically.
-- **Add JAV from your browser**: detect or select a video code on JavDB, MissAV, Jable and other sites, then send it to Peach for cloud download and library ingestion. The [userscript](https://github.com/peach-mitao/peach-userscript) is maintained independently; see [installation and pairing](docs/JAV_BROWSER.md).
+- **Add JAV from your browser**: detect or select a video code on JavDB, MissAV, Jable and other sites, then send it to Peach for cloud download and library ingestion. The [userscript](https://github.com/avonar69/Peachy-userscript) is maintained independently; see [installation and pairing](docs/JAV_BROWSER.md).
 - **Taste preferences**: combine viewing, feedback, your library, browser history, bookmarks and follows to understand your preferences. Read history and bookmarks from supported local browsers in one action, or import HTML bookmarks and Chromium Bookmarks JSON. Stop reading a source or remove it when needed. See [taste data sources](docs/TASTE_SOURCES.md).
 
 Watch history, favorites and settings stay on your computer. Scanning leaves original files untouched; manual organization offers a preview and an undo for the last batch.
@@ -98,7 +107,7 @@ Try search, filters and profiles in the [read-only demo](https://demo.peach.vide
 
 ### Windows
 
-1. Download the full installer, `Peach-<version>-windows-x64-setup.exe`, from [Releases](https://github.com/peach-mitao/peach/releases) and run it. No administrator rights needed. Alternatively, extract the full portable package and run `Peach.exe`.
+1. Download the full installer, `Peach-<version>-windows-x64-setup.exe`, from [Releases](https://github.com/avonar69/Peachy/releases) and run it. No administrator rights needed. Alternatively, extract the full portable package and run `Peach.exe`.
 2. Choose media directories and access permissions on the setup page that opens in your browser.
 3. Start scanning, then browse and play in your browser.
 
@@ -110,7 +119,7 @@ Test builds are unsigned. If Windows says “Windows protected your PC”, confi
 
 Build a self-contained `.app` and DMG locally on macOS. Running it requires neither Python, a source checkout, nor another computer. See [the macOS build guide](docs/OPERATIONS.md#macos-独立测试包).
 
-The release workflow generates separate Apple Silicon (`macos-arm64.dmg`) and Intel (`macos-x86_64.dmg`) test packages. Check the actual assets on [Releases](https://github.com/peach-mitao/peach/releases) for availability. Check your chip in About This Mac, open the matching image, and drag Peach into Applications. Test packages are not notarized; media tools must be installed separately.
+The release workflow generates separate Apple Silicon (`macos-arm64.dmg`) and Intel (`macos-x86_64.dmg`) test packages. Check the actual assets on [Releases](https://github.com/avonar69/Peachy/releases) for availability. Check your chip in About This Mac, open the matching image, and drag Peach into Applications. Test packages are not notarized; media tools must be installed separately.
 
 ### Run from source (Windows, macOS)
 
@@ -129,7 +138,7 @@ See [Docker deployment](docs/DOCKER.md) for setup and supported configurations.
 
 ## Reporting problems
 
-Check [user feedback](https://github.com/peach-mitao/peach/issues), or [open an issue](https://github.com/peach-mitao/peach/issues/new/choose) with the version, steps, expected result and actual result. Hide credentials, LAN addresses and full paths in screenshots; do not upload databases or media. Report security issues privately through the [security policy](SECURITY.md).
+Check [user feedback](https://github.com/avonar69/Peachy/issues), or [open an issue](https://github.com/avonar69/Peachy/issues/new/choose) with the version, steps, expected result and actual result. Hide credentials, LAN addresses and full paths in screenshots; do not upload databases or media. Report security issues privately through the [security policy](SECURITY.md).
 
 ## Documentation
 

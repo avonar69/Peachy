@@ -16,12 +16,12 @@
 [Setup]
 ; 与 desktop_installer.APP_ID 相同；改了它，已装的机器会并排出现第二份。
 AppId={{02D9748A-78F6-4866-AC75-918177194DAB}
-AppName=Peach
+AppName=Peachy
 AppVersion={#AppVersion}
-AppVerName=Peach {#AppVersion}
-AppPublisher=Peach
-AppPublisherURL=https://github.com/peach-mitao/peach
-AppSupportURL=https://github.com/peach-mitao/peach/issues
+AppVerName=Peachy {#AppVersion}
+AppPublisher=Peachy
+AppPublisherURL=https://github.com/avonar69/Peachy
+AppSupportURL=https://github.com/avonar69/Peachy/issues
 ; 只装到当前用户：自更新在程序目录旁边建事务目录再整目录切换，Program Files 不可写。
 PrivilegesRequired=lowest
 DefaultDirName={userpf}\Peach
@@ -39,7 +39,7 @@ OutputBaseFilename=Peach-{#AppVersion}-windows-x64-setup
 #endif
 SetupIconFile=..\..\resources\peach.ico
 UninstallDisplayIcon={app}\Peach.exe
-UninstallDisplayName=Peach
+UninstallDisplayName=Peachy
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -86,7 +86,7 @@ Name: "{userdesktop}\Peach"; Filename: "{app}\Peach.exe"; Parameters: "--show"; 
 
 [Run]
 Filename: "{app}\Peach.exe"; Parameters: "--show"; Description: "{cm:LaunchProgram,Peach}"; Flags: nowait postinstall skipifsilent
-Filename: "https://github.com/peach-mitao/peach"; Description: "打开 Peach 仓库，给项目加星"; Flags: shellexec postinstall skipifsilent unchecked
+Filename: "https://github.com/avonar69/Peachy"; Description: "打开 Peachy 仓库，给项目加星"; Flags: shellexec postinstall skipifsilent unchecked
 
 [UninstallDelete]
 ; 自更新整目录换过之后，卸载记录里的文件清单不再完整，按目录整个移除。

@@ -83,7 +83,7 @@ class JobStatusTests(unittest.TestCase):
             "换算只能改变显示的时区，不能改变它指的时刻",
         )
         self.assertEqual(
-            moment.utcoffset(), datetime.now().astimezone().utcoffset(),
+            moment.utcoffset(), datetime(2026, 8, 29, 2, 51, 51, tzinfo=timezone.utc).astimezone().utcoffset(),
             "渲染出的时间要带本机时区偏移",
         )
         self.assertEqual(MODULE._local("说不清"), "说不清", "解析不了就原样显示")

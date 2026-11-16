@@ -1,0 +1,41 @@
+name: Publish Peachy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: peachy-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'avonar69/Peachy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+      - name: 通过统一入口核对测试并创建版本标签
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          python scripts/release_tag.py --repo "$GITHUB_REPOSITORY" --apply
+      - name: 启动标签对应的桌面构建与发行
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version=$(python -c 'import sys; sys.path.insert(0,"src"); from peach import __version__; print(__version__)')
+          gh workflow run release.yml --ref "v$version"

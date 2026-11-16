@@ -2,7 +2,21 @@
   <img src="resources/peach-logo.png" alt="Peach" width="96">
 </p>
 
-<h1 align="center">Peach</h1>
+<h1 align="center">Peachy</h1>
+
+Peachy 是基于 [Peach](https://github.com/peach-mitao/peach) 的独立分支，保留原项目的 AGPL-3.0-or-later 许可证及作者归属。此仓库的 `master` 发布定制功能；最新上游代码通过独立兼容性 PR 评估，未合入的功能不属于当前发行版。
+
+## Peachy 功能
+
+- **多语言与局域网访问**：默认英文，提供简繁中文、越南语、日语、韩语、德语、西班牙语、法语及葡萄牙语；覆盖设置、任务、诊断与复核界面。支持显式开放局域网连接及普通 HTTP 环境。
+- **StashDB 匹配与复核**：综合文件名、演员目录、厂牌、日期、时长及可选 OSHASH；支持忽略文本、可调门槛、已有分数快速匹配、近期视频重试及统一人工复核。演员、厂牌和作品可分别同步，手工修订受到保护。
+- **演员与厂牌资料**：同步演员照片、别名、生日、身高等资料及作品标签；提供演员合并、备份与撤销。资料页和名册显示个人平均星级与喜欢／不喜欢数量，未评分影片不计入均值。
+- **增量扫描与时间轴**：默认只处理新增视频；媒体目录支持独立扫描开关与周期，零小时关闭自动扫描。新增视频定向生成时间轴，提供间隔、速度、硬件解码及停止控制。
+- **播放控制**：协商浏览器可直接播放的编码；提供半星评分、续播进度、音量记忆、四向跳转与快捷键、手机双击跳转、全屏比例及实验按需预览和性能开关。
+- **RSS 与下载**：图文订阅、多个预览、保存历史、去重、分页、多订阅筛选、定时和手动刷新；支持 AllDebrid、Real-Debrid、SABnzbd、NZBGet 和 SABconnect++，显示下载状态、速率及完成标记，可在下载后定向导入。
+- **桌面发行**：提供 Windows x64 安装包与免安装包，以及 macOS Apple Silicon／Intel DMG。为保持已有配置及更新兼容性，内部 Python 包、数据目录、可执行文件与部分制品文件名保留 `peach`／`Peach`。
+
+下载与更新以 [Peachy Releases](https://github.com/avonar69/Peachy/releases) 为准；这些功能来自本定制分支，不代表上游 Peach 已合入。安装和 Docker 用法沿用下文，英文说明见 [README.en.md](README.en.md)。
 
 直接播放按浏览器对片源实际容器、视频 profile 与音频组合的报告协商，覆盖可用的 HEVC／H.265、H.264、AV1、VP8／VP9 等编码；不支持时保留兼容转换与失败回退。浏览与播放设置提供默认关闭的按需拖动预览，直接在浏览器解码非计费本地影片的悬停帧，仅使用小型内存缓存，不生成时间轴文件。
 
@@ -29,20 +43,15 @@ debrid 下载沿用后台任务浮层，跨页展示传输与导入进度，可�
 <p align="center">给自己用的私人影片馆藏：本地硬盘、网盘和关注的创作者，放在一个地方看。</p>
 
 <p align="center">
-  <a href="https://peach.video">官网</a> ·
-  <a href="https://github.com/peach-mitao/peach/releases">下载安装包</a> ·
-  <a href="https://demo.peach.video">在线演示</a> ·
-  <a href="https://github.com/peach-mitao/peach/releases/tag/intro-video">介绍视频</a> ·
-  <a href="https://github.com/peach-mitao/peach/issues">问题反馈</a> ·
-  <a href="https://github.com/orgs/peach-mitao/projects/7/views/1">需求看板</a> ·
-  <a href="https://github.com/orgs/peach-mitao/projects/7/views/3">路线图</a> ·
+  <a href="https://github.com/avonar69/Peachy/releases">下载安装包</a> ·
+  <a href="https://github.com/avonar69/Peachy/issues">问题反馈</a> ·
   <a href="#文档">文档</a> ·
   <a href="README.en.md">English</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/peach-mitao/peach/releases"><img src="https://img.shields.io/github/v/release/peach-mitao/peach?include_prereleases&amp;filter=v*&amp;sort=semver&amp;display_name=tag" alt="release"></a>
-  <a href="https://github.com/peach-mitao/peach/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/peach-mitao/peach/test.yml?branch=master&amp;label=tests&amp;logo=githubactions&amp;logoColor=white" alt="CI 状态"></a>
+  <a href="https://github.com/avonar69/Peachy/releases"><img src="https://img.shields.io/github/v/release/avonar69/Peachy?include_prereleases&amp;filter=v*&amp;sort=semver&amp;display_name=tag" alt="release"></a>
+  <a href="https://github.com/avonar69/Peachy/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/avonar69/Peachy/test.yml?branch=master&amp;label=tests&amp;logo=githubactions&amp;logoColor=white" alt="CI 状态"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0--or--later-blue?logo=gnu&amp;logoColor=white" alt="license"></a>
   <a href="docs/TESTING_DESKTOP.md"><img src="https://img.shields.io/badge/Windows-x64-0078D4" alt="Windows x64"></a>
   <a href="docs/OPERATIONS.md#macos-独立测试包"><img src="https://img.shields.io/badge/macOS-DMG-555555?logo=apple&amp;logoColor=white" alt="macOS 独立应用构建与安装"></a>
@@ -62,7 +71,7 @@ https://github.com/user-attachments/assets/a5610874-e611-41bb-be22-7d99f0d64b62
 - **跨站关注**：同一创作者在 FANBOX、Patreon、Kemono 等站点的更新汇到一起，同一作品合成一张卡。
 - **追新作、找想看的**：按女优订阅新作，按口味发现作品，用「想要」清单留住待找的片子。
 - **云下载**：按番号查找资源或粘贴磁力，提交到 115 或 PikPak，落地后自动整理入库。
-- **浏览器添加 JAV**：在 JavDB、MissAV、Jable 等站点识别或选中番号，一键交给 Peach 云下载入库。[用户脚本](https://github.com/peach-mitao/peach-userscript)独立维护，见[安装与配对](docs/JAV_BROWSER.md)。
+- **浏览器添加 JAV**：在 JavDB、MissAV、Jable 等站点识别或选中番号，一键交给 Peach 云下载入库。[用户脚本](https://github.com/avonar69/Peachy-userscript)独立维护，见[安装与配对](docs/JAV_BROWSER.md)。
 - **口味**：结合观看、反馈、馆藏、浏览历史、书签与关注关系分析偏好。一次读取本机浏览器的历史和书签，也可导入 HTML 书签或 Chromium Bookmarks JSON；来源可停止读取或删除。见[口味数据来源](docs/TASTE_SOURCES.md)。
 
 观看记录、收藏和设置保存在本机。扫描不动原文件；手动整理先预览，可撤回上一批。
@@ -106,7 +115,7 @@ https://github.com/user-attachments/assets/a5610874-e611-41bb-be22-7d99f0d64b62
 
 ### Windows
 
-1. 从 [Releases](https://github.com/peach-mitao/peach/releases) 下载完整安装包 `Peach-<版本>-windows-x64-setup.exe`，双击安装，无需管理员权限；也可下载完整免安装包，解压后运行 `Peach.exe`。
+1. 从 [Releases](https://github.com/avonar69/Peachy/releases) 下载完整安装包 `Peach-<版本>-windows-x64-setup.exe`，双击安装，无需管理员权限；也可下载完整免安装包，解压后运行 `Peach.exe`。
 2. 浏览器打开首次设置页后，选择媒体目录和访问范围。
 3. 开始扫描，随后在浏览器里浏览和播放。
 
@@ -118,7 +127,7 @@ https://github.com/user-attachments/assets/a5610874-e611-41bb-be22-7d99f0d64b62
 
 macOS 可在本机构建独立 `.app` 与 DMG，运行不需要 Python、源码或另一台电脑。构建与安装见 [macOS 独立测试包](docs/OPERATIONS.md#macos-独立测试包)。
 
-发版流程分别生成 Apple Silicon（`macos-arm64.dmg`）与 Intel（`macos-x86_64.dmg`）测试包；可下载版本以 [Releases](https://github.com/peach-mitao/peach/releases) 的实际资产为准。在「关于本机」确认芯片，打开对应镜像并将 Peach 拖入「应用程序」。测试包未完成 Apple 公证，媒体工具需另行准备。
+发版流程分别生成 Apple Silicon（`macos-arm64.dmg`）与 Intel（`macos-x86_64.dmg`）测试包；可下载版本以 [Releases](https://github.com/avonar69/Peachy/releases) 的实际资产为准。在「关于本机」确认芯片，打开对应镜像并将 Peach 拖入「应用程序」。测试包未完成 Apple 公证，媒体工具需另行准备。
 
 ### 从源码运行（Windows、macOS）
 
@@ -137,7 +146,7 @@ macOS 可在本机构建独立 `.app` 与 DMG，运行不需要 Python、源码�
 
 ## 问题反馈
 
-先查看[用户反馈](https://github.com/peach-mitao/peach/issues)，或[提交问题](https://github.com/peach-mitao/peach/issues/new/choose)，附上版本、操作步骤、预期与实际结果。截图请遮掉凭据、局域网地址和完整路径，不要上传数据库或媒体；安全问题按[安全政策](SECURITY.md)私下报告。
+先查看[用户反馈](https://github.com/avonar69/Peachy/issues)，或[提交问题](https://github.com/avonar69/Peachy/issues/new/choose)，附上版本、操作步骤、预期与实际结果。截图请遮掉凭据、局域网地址和完整路径，不要上传数据库或媒体；安全问题按[安全政策](SECURITY.md)私下报告。
 
 ## 文档
 

@@ -8,4 +8,4 @@ Apple Silicon 下载文件名含 `macos-arm64.dmg` 的安装镜像；Intel 下�
 
 应用内置 Python，可独立运行；单机使用不依赖 Windows。测试包使用 ad-hoc 签名，尚未完成 Developer ID 签名与 Apple 公证。媒体工具需另行准备，macOS 暂无在线更新安装器。系统版本下限以包内 `LSMinimumSystemVersion` 为准。
 
-安装、来源挂载与双机复制见 [macOS 使用说明](https://github.com/peach-mitao/peach/blob/master/docs/OPERATIONS.md#macos-独立测试包)。各架构的原生构建、镜像挂载与独立运行通过后，两个 DMG 才会随同一 Release 上传；哈希包含在 `SHA256SUMS.txt`。
+安装、来源挂载与双机复制见 [macOS 使用说明](https://github.com/avonar69/Peachy/blob/master/docs/OPERATIONS.md#macos-独立测试包)。各架构的原生构建、镜像挂载与独立运行通过后，两个 DMG 才会随同一 Release 上传；哈希包含在 `SHA256SUMS.txt`。
