@@ -32,7 +32,7 @@ Removed / Fixed / Security。
 - **播放**：浏览器能力协商、全屏比例、半星评分、手机双击跳转、独立快捷键、音量记忆及实验按需预览。
 - **关注**：RSS 图文、历史保留与分页、多订阅筛选、AllDebrid／Real-Debrid、SABnzbd／NZBGet 与下载后导入。
 - **界面**：演员和厂牌显示个人平均星级及喜欢与不喜欢数量，均值不含未评分作品。
-- **桌面**：Peachy Windows x64 与 macOS Apple Silicon／Intel 制品从本分支独立发布，更新入口指向 Peachy。
+- **桌面**：Peachy Windows x64 与 macOS Intel 制品从本分支独立发布，更新入口指向 Peachy。
 
 ### 新增
 

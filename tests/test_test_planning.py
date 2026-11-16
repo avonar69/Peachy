@@ -207,7 +207,7 @@ class TestPlanningTests(unittest.TestCase):
         result = ci_plan.plan('push', ['web/app.js'])
         rows = result['matrix']['include']
         self.assertEqual(len([r for r in rows if r['scope'] == 'full']), 6)
-        self.assertEqual({r['os'] for r in rows}, {'windows-latest', 'macos-latest'})
+        self.assertEqual({r['os'] for r in rows}, {'windows-latest', 'macos-15-intel'})
         self.assertEqual({r['python'] for r in rows}, {'3.14'})
         self.assertTrue(all(r['scope'] == 'full' for r in rows))
         self.assertEqual(len(result['wheel_matrix']['include']), 2)
@@ -280,10 +280,10 @@ class TestPlanningTests(unittest.TestCase):
             result = ci_plan.plan(event, paths)
             self.assertTrue(result['wide'])
             self.assertEqual({r['os'] for r in result['matrix']['include'] if r['scope'] == 'full'},
-                             {'macos-latest', 'windows-latest'})
+                             {'macos-15-intel', 'windows-latest'})
             wheels = result['wheel_matrix']['include']
             self.assertCountEqual(wheels, [{'os': 'windows-latest', 'python': '3.14'},
-                                          {'os': 'macos-latest', 'python': '3.14'}])
+                                          {'os': 'macos-15-intel', 'python': '3.14'}])
 
     def test_pull_request_uses_changed_domains(self):
         rows = ci_plan.plan('pull_request', ['src/peach/follow_store.py'])['matrix']['include']

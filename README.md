@@ -14,7 +14,7 @@ Peachy 是基于 [Peach](https://github.com/peach-mitao/peach) 的独立分支�
 - **增量扫描与时间轴**：默认只处理新增视频；媒体目录支持独立扫描开关与周期，零小时关闭自动扫描。新增视频定向生成时间轴，提供间隔、速度、硬件解码及停止控制。
 - **播放控制**：协商浏览器可直接播放的编码；提供半星评分、续播进度、音量记忆、四向跳转与快捷键、手机双击跳转、全屏比例及实验按需预览和性能开关。
 - **RSS 与下载**：图文订阅、多个预览、保存历史、去重、分页、多订阅筛选、定时和手动刷新；支持 AllDebrid、Real-Debrid、SABnzbd、NZBGet 和 SABconnect++，显示下载状态、速率及完成标记，可在下载后定向导入。
-- **桌面发行**：提供 Windows x64 安装包与免安装包，以及 macOS Apple Silicon／Intel DMG。为保持已有配置及更新兼容性，内部 Python 包、数据目录、可执行文件与部分制品文件名保留 `peach`／`Peach`。
+- **桌面发行**：提供 Windows x64 安装包与免安装包，以及 macOS Intel DMG。为保持已有配置及更新兼容性，内部 Python 包、数据目录、可执行文件与部分制品文件名保留 `peach`／`Peach`。
 
 下载与更新以 [Peachy Releases](https://github.com/avonar69/Peachy/releases) 为准；这些功能来自本定制分支，不代表上游 Peach 已合入。安装和 Docker 用法沿用下文，英文说明见 [README.en.md](README.en.md)。
 
@@ -127,7 +127,7 @@ https://github.com/user-attachments/assets/a5610874-e611-41bb-be22-7d99f0d64b62
 
 macOS 可在本机构建独立 `.app` 与 DMG，运行不需要 Python、源码或另一台电脑。构建与安装见 [macOS 独立测试包](docs/OPERATIONS.md#macos-独立测试包)。
 
-发版流程分别生成 Apple Silicon（`macos-arm64.dmg`）与 Intel（`macos-x86_64.dmg`）测试包；可下载版本以 [Releases](https://github.com/avonar69/Peachy/releases) 的实际资产为准。在「关于本机」确认芯片，打开对应镜像并将 Peach 拖入「应用程序」。测试包未完成 Apple 公证，媒体工具需另行准备。
+发版流程生成 Intel（`macos-x86_64.dmg`）测试包，可下载版本以 [Releases](https://github.com/avonar69/Peachy/releases) 的实际资产为准。打开镜像并将 Peach 拖入「应用程序」。测试包未完成 Apple 公证，媒体工具需另行准备。
 
 ### 从源码运行（Windows、macOS）
 

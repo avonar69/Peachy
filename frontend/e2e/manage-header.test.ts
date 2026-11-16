@@ -197,7 +197,7 @@ describe('批量条', () => {
         assert.equal(await page.locator(DOCK).count(), 0, '没选中时批量条就画出来了');
         await pickTwo(cards);
         assert.deepEqual(await readDock(page),
-          { count: '已选 2 项', buttons: ['喜欢', '看过', '稍后看', '判定产地', '移入回收站', '取消'] });
+          { count: '已选 2 项', buttons: ['喜欢', '更改厂牌', '添加演员', '看过', '稍后看', '判定产地', '移入回收站', '取消'] });
         await page.locator(`${DOCK} [data-batch-group="clear"]`).click();
         await page.locator(DOCK).waitFor({ state: 'detached', timeout: 10_000 });
 

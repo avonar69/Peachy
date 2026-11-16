@@ -670,7 +670,7 @@ describe('关注页岛', () => {
       await page.locator('[data-follow-older][aria-busy="true"]').waitFor();
       // 检查那一趟只让往回抓那枚忙、不换字。
       assert.equal(await page.locator('[data-follow-older]').innerText(), '抓更早的一页');
-      assert.deepEqual(again.stub.writes, [{ url: '/api/follow/check', body: { background: true } }]);
+      assert.deepEqual(again.stub.writes, [{ url: '/api/follow/check', body: { background: true, include_rss: true } }]);
       assert.deepEqual(again.problems, []);
     } finally {
       await again.close();

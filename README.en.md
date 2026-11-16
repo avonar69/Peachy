@@ -14,7 +14,7 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 - **Incremental scans and timeline previews:** Find-new is the default; folders have individual scan switches and schedules, with zero hours disabling automatic scans. New videos receive targeted timeline generation with configurable intervals, speed, hardware decoding and cancellation.
 - **Playback:** Browser-aware direct-play negotiation, half-star ratings, resume positions, remembered volume, independent seek steps and shortcuts, mobile double-tap seeking, fullscreen sizing, and optional on-demand previews and performance features.
 - **RSS and downloads:** Illustrated feeds, multiple previews, retained history, deduplication, pagination, feed filters and scheduled/manual refresh. AllDebrid, Real-Debrid, SABnzbd, NZBGet and SABconnect++ support includes download status, speed, completion receipts and optional import after download.
-- **Desktop releases:** Windows x64 installers/portable packages and macOS Apple Silicon/Intel DMGs. Internal package names, data directories, executables and some asset filenames retain `peach`/`Peach` for compatibility with existing installations.
+- **Desktop releases:** Windows x64 installers/portable packages and macOS Intel DMGs. Internal package names, data directories, executables and some asset filenames retain `peach`/`Peach` for compatibility with existing installations.
 
 Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](README.md).
 
@@ -119,7 +119,7 @@ Test builds are unsigned. If Windows says “Windows protected your PC”, confi
 
 Build a self-contained `.app` and DMG locally on macOS. Running it requires neither Python, a source checkout, nor another computer. See [the macOS build guide](docs/OPERATIONS.md#macos-独立测试包).
 
-The release workflow generates separate Apple Silicon (`macos-arm64.dmg`) and Intel (`macos-x86_64.dmg`) test packages. Check the actual assets on [Releases](https://github.com/avonar69/Peachy/releases) for availability. Check your chip in About This Mac, open the matching image, and drag Peach into Applications. Test packages are not notarized; media tools must be installed separately.
+The release workflow generates an Intel (`macos-x86_64.dmg`) test package. Check the actual assets on [Releases](https://github.com/avonar69/Peachy/releases) for availability. Open the image and drag Peach into Applications. Test packages are not notarized; media tools must be installed separately.
 
 ### Run from source (Windows, macOS)
 
