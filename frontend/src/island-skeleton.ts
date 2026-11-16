@@ -63,6 +63,13 @@ export function islandButton(
   return `<button type="button" class="${BASE} ${shape} ${VARIANT[variant]}"${attrs ? ` ${attrs}` : ''}>${icon}${text}</button>`;
 }
 
+/** 多选菜单等待态保留前后图标与标签的尺寸，不接受交互。 */
+export function islandChoiceMenu(label: string, glyph: string): string {
+  return `<button type="button" data-skeleton-action disabled tabindex="-1" aria-label="${esc(label)}" class="${BASE} ${SIZE.medium} ${VARIANT.secondary}">`
+    + `${islandGlyph(glyph, 'size-4')}<span class="${LABEL.medium}">${esc(label)}</span>`
+    + `${islandGlyph('chevron-down', 'size-4')}</button>`;
+}
+
 type SelectSize = 'md' | 'sm';
 const SELECT: Record<SelectSize, { box: string; value: string; chevron: string }> = {
   md: { box: 'gap-1.5 px-2.5 py-2 text-body-medium', value: 'gap-[5px]', chevron: 'size-4' },
