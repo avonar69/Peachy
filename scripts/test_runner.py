@@ -406,6 +406,12 @@ def dependency_inputs(source: str) -> dict:
     return change_impact.dependency_inputs(source)
 
 
+def unsafe_file_modes(raw: str) -> bool:
+    """执行位或符号链接的索引变化和工作区变化都要求完整验证。"""
+    modes = [part.lstrip(":") for part in raw.split()[:2]]
+    return "120000" in modes or (len(modes) == 2 and "000000" not in modes and modes[0] != modes[1])
+
+
 def changed_contents(root: Path, base: str, paths: Iterable[str]) -> dict:
     result = {}
     for path in paths:
@@ -413,8 +419,8 @@ def changed_contents(root: Path, base: str, paths: Iterable[str]) -> dict:
             continue
         try:
             raw = test_evidence.git(root, "diff", "--raw", base, "--", path)
-            modes = [part.lstrip(":") for part in raw.split()[:2]]
-            if "120000" in modes or (len(modes) == 2 and "000000" not in modes and modes[0] != modes[1]):
+            staged = test_evidence.git(root, "diff", "--cached", "--raw", base, "--", path)
+            if unsafe_file_modes(raw) or unsafe_file_modes(staged):
                 result[path] = (None, None)
                 continue
             result[path] = (test_evidence.git(root, "show", f"{base}:{path}"),
@@ -499,6 +505,7 @@ def changed_files(root: Path = ROOT, base: str = "master") -> list[str]:
     commands = (
         ("git", "diff", "--name-only", "-z", f"{base}...HEAD"),
         ("git", "diff", "--name-only", "-z", "HEAD"),
+        ("git", "diff", "--cached", "--name-only", "-z", "HEAD"),
         ("git", "ls-files", "--others", "--exclude-standard", "-z"),
     )
     found: set[str] = set()

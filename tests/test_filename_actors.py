@@ -2,7 +2,7 @@
 import sqlite3
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from peach import filename_actors, filename_matching, scan
 from peach.entities import upsert_asset_entity
@@ -95,14 +95,16 @@ class FilenameActorsTests(unittest.TestCase):
         media = self.root / 'media'
         media.mkdir()
         (media / 'EvilAngel.26.10.22.Jane.Doe.mp4').write_bytes(b'test')
-        declared = {'local': (str(media),)}
-        scan.scan_location(self.db, 'local', str(media), declared_roots=declared, report=lambda _: None)
+        root = r'R:\media'
+        options = dict(declared_roots={'local': (root,)}, mounts={'local': (str(media),)}, windows=False)
+        scan.scan_location(self.db, 'local', root, **options, report=lambda _: None)
         self.assertEqual(self.connection.execute('SELECT COUNT(*) FROM asset_entity WHERE source=?', (filename_actors.SOURCE,)).fetchone()[0], 1)
         (media / 'OtherStudio.26.10.22.John.Smith.mp4').write_bytes(b'test')
-        scan.ingest_path(self.db, 'local', str(media / 'OtherStudio.26.10.22.John.Smith.mp4'), declared_roots=declared)
+        scan.ingest_path(self.db, 'local', str(PureWindowsPath(root, 'OtherStudio.26.10.22.John.Smith.mp4')), **options)
         self.assertEqual(self.connection.execute('SELECT COUNT(*) FROM asset_entity WHERE source=?', (filename_actors.SOURCE,)).fetchone()[0], 2)
         self.assertEqual(self.connection.execute('SELECT COUNT(*) FROM asset_entity WHERE source=?', (filename_actors.STUDIO_SOURCE,)).fetchone()[0], 2)
         self.assertEqual({row[0] for row in self.connection.execute("SELECT studio FROM asset WHERE id<>1")}, {'EvilAngel', 'OtherStudio'})
+        self.assertTrue(all(row[0].startswith(root + '\\') for row in self.connection.execute('SELECT path FROM asset WHERE id<>1')))
 
     def test_studio_prefix_alias_conflicts_and_owned_projection(self):
         studio = upsert_asset_entity(self.connection, kind='studio', name='Evil Angel', asset_id=1,

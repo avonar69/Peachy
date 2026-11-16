@@ -166,7 +166,9 @@ class VerificationTests(unittest.TestCase):
         self.git("add", "--", name)
         self.git("commit", "-m", "test: fixture")
         self.git("update-index", "--chmod=+x", name)
-        contents = runner.changed_contents(self.repo, "HEAD", [name])
+        paths = runner.changed_files(self.repo, "HEAD")
+        self.assertIn(name, paths)
+        contents = runner.changed_contents(self.repo, "HEAD", paths)
         self.assertEqual(runner.scopes_for_changes([name], contents=contents)[0], ("full",))
 
     def test_python_symlinks_require_full_for_each_change_kind(self):

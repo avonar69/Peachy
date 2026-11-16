@@ -61,10 +61,12 @@ describe('沉浸模式', () => {
       assert.ok(wide && tall, '演示库里横屏、竖屏各要有一条');
       await page.route(/\/api\/items\?.*sort=rand/, (route) => route.fulfill({ json: { items: [wide, tall]
         .map((item) => items.find((full) => full.id === item.id)) } }));
-      const planned: number[] = [];
+      const planned: { id: number; probe: boolean }[] = [];
       page.on('request', (request) => {
         const url = new URL(request.url());
-        if (url.pathname === '/api/stream-plan') planned.push(Number(url.searchParams.get('id')));
+        if (url.pathname === '/api/stream-plan') planned.push({
+          id: Number(url.searchParams.get('id')), probe: url.searchParams.get('probe_only') === 'true',
+        });
       });
       const holds = new Map<number, { wait: Promise<void>; release: () => void }>();
       for (const item of [wide, tall]) {
@@ -93,7 +95,7 @@ describe('沉浸模式', () => {
       holds.get(wide.id)!.release();
       await settled(page);
       assert.deepEqual(await sample(page), { wide: true, shown: true, slides: [''] });
-      assert.deepEqual(planned, [wide.id]);
+      assert.deepEqual(planned, [{ id: wide.id, probe: true }, { id: wide.id, probe: false }]);
 
       await page.dispatchEvent('[data-immerse]', 'wheel', { deltaY: 100 });
       await page.waitForFunction(() => document.querySelectorAll('[data-immerse-track] [data-immerse-slide]').length === 2);
@@ -105,7 +107,8 @@ describe('沉浸模式', () => {
       holds.get(tall.id)!.release();
       await settled(page);
       assert.deepEqual(await sample(page), { wide: false, shown: true, slides: [''] });
-      assert.deepEqual(planned, [wide.id, tall.id]);
+      assert.deepEqual(planned, [{ id: wide.id, probe: true }, { id: wide.id, probe: false },
+        { id: tall.id, probe: true }, { id: tall.id, probe: false }]);
       assert.deepEqual(opened.problems, [], JSON.stringify(opened.problems));
     } finally {
       releases.forEach((release) => release());
