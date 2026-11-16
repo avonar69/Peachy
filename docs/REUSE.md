@@ -80,6 +80,8 @@ JS/TS 文案复用 [Oxc parser](https://oxc.rs/docs/guide/usage/parser)，开发
 
 ## macOS 独立构建
 
+镜像布局复用 MIT 许可的 [`dmgbuild==1.6.7`](https://github.com/dmgbuild/dmgbuild/tree/v1.6.7)，通过其 `create_hook` 在复制完成的镜像内执行系统 `codesign` 的 ad-hoc 签名与严格资源校验。HFS+ 会将日文等文件名转换为分解形式，因此资源签名以镜像内的最终文件名为准；Intel macOS 制品验收覆盖挂载、签名及源码树外启动。沿用已有构建依赖，不新增运行时依赖。
+
 独立应用复用项目已有的 PyInstaller 6.22.3（GPL-2.0-or-later，带发行例外），由 macOS 原生 bootloader 承载 Python 3.14 与 Cocoa 菜单栏，资源与 CLI 入口沿用现有桌面实现。镜像使用系统自带的 `hdiutil`，无需新增运行时依赖。构建与签名依据 [PyInstaller macOS 文档](https://www.pyinstaller.org/en/stable/usage.html)和 [Apple 分发文档](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution)。
 
 Peach 负责独立数据目录、首启、构建身份和资源清单。arm64 与 x86_64 使用各自的 Python 和原生扩展，按 [PyInstaller 架构约束](https://pyinstaller.org/en/stable/feature-notes.html#macos-multi-arch-support)分别生成；不使用 lipo 合并冻结程序。应用不安装系统组件，采用 DMG 拖放安装；PKG 的系统级安装流程不属于这条路径。源码运行的 LaunchAgent 外壳继续使用自己的构建入口。独立制品的启动与读写验收使用隔离数据目录，不改变真实 ledger 或双机配置。
