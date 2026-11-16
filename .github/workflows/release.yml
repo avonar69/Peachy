@@ -20,9 +20,19 @@ jobs:
           set -euo pipefail
           mount="$RUNNER_TEMP/Peach-inspect"
           mkdir -p "$mount"
-          hdiutil attach release/*-macos-x86_64.dmg -shadow "$RUNNER_TEMP/Peach-shadow" -nobrowse -mountpoint "$mount"
+          hdiutil attach release/*-macos-x86_64.dmg -readonly -nobrowse -mountpoint "$mount"
           trap 'hdiutil detach "$mount"' EXIT
-          xattr -cr "$mount/Peach.app"
-          codesign --force --sign - "$mount/Peach.app"
+          staging="$RUNNER_TEMP/Peach-stage"
+          mkdir -p "$staging"
+          ditto "$mount/Peach.app" "$staging/Peach.app"
+          xattr -cr "$staging/Peach.app"
+          codesign --force --sign - "$staging/Peach.app"
+          codesign --verify --deep --strict --verbose=4 "$staging/Peach.app"
+          hdiutil detach "$mount"
+          trap - EXIT
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -srcfolder "$staging" -fs APFS -format UDZO "$RUNNER_TEMP/Peach-APFS.dmg"
+          hdiutil attach "$RUNNER_TEMP/Peach-APFS.dmg" -readonly -nobrowse -mountpoint "$mount"
+          trap 'hdiutil detach "$mount"' EXIT
           codesign --verify --deep --strict --verbose=4 "$mount/Peach.app"
           python3 scripts/smoke_macos.py "$mount/Peach.app"
