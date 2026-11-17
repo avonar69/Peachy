@@ -4,6 +4,8 @@
 
 <h1 align="center">Peachy</h1>
 
+<p align="center"><a href="README.md#english">English</a> · <a href="README.md#简体中文">简体中文</a></p>
+
 Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), retaining its AGPL-3.0-or-later license and original attribution. This repository’s `master` publishes the custom features below. New upstream changes are reviewed in a separate compatibility PR before inclusion in a release.
 
 ## Peachy features
@@ -16,7 +18,7 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 - **RSS and downloads:** Illustrated feeds, multiple previews, retained history, deduplication, pagination, feed filters and scheduled/manual refresh. AllDebrid, Real-Debrid, SABnzbd, NZBGet and SABconnect++ support includes download status, speed, completion receipts and optional import after download.
 - **Desktop releases:** Windows x64 installers/portable packages and macOS Intel DMGs. Internal package names, data directories, executables and some asset filenames retain `peach`/`Peach` for compatibility with existing installations.
 
-Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](README.md).
+Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](README.md#简体中文).
 
 Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
 
