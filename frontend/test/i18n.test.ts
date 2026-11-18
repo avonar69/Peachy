@@ -4,6 +4,12 @@ import { jsx } from '../src/i18n/jsx-runtime';
 
 afterEach(() => localStorage.removeItem('peach.language'));
 describe('interface localization', () => {
+  it('演员总数表示出演人数并保留中文共演说明', () => {
+    for (const [language, expected] of [['en', '(3 actors)'], ['vi', '(3 diễn viên)'], ['zh-CN', '等 3 人']]) {
+      localStorage.setItem('peach.language', language!);
+      expect(translate('等 3 人')).toBe(expected);
+    }
+  });
   it('uses bundled catalogs for every additional language and preserves dynamic parameters', async () => {
     const { LANGUAGES, localeCatalogs } = await import('../src/i18n/languages');
     for (const [key] of LANGUAGES) {

@@ -102,6 +102,7 @@ class Service:
                 raise ValueError('The debrid task queue is full.')
             self.jobs[identity] = {**old, 'id': identity, 'entry_id': entry_id, 'provider': provider,
                 'source': link, 'kind': 'resolve', 'status': 'queued', 'error': '',
+                'dismissed': False,
                 'auto_download': bool(auto_download), 'delivery_queued': False,
                 'files': old.get('files', []) if old.get('status') != 'ready' else [],
                 'key_stamp': stamp, 'next_poll': 0, 'updated_at': time.time()}
@@ -155,7 +156,7 @@ class Service:
         count = 0
         with self.lock:
             for job in self.jobs.values():
-                if job.get('kind') != 'download' or job.get('status') not in ('complete', 'failed', 'cancelled'):
+                if job.get('status') not in ('complete', 'failed', 'cancelled'):
                     continue
                 if job.get('import_state') in ('pending', 'queuing', 'queued', 'running') or job.get('dismissed'):
                     continue

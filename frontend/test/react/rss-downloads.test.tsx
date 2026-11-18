@@ -12,6 +12,26 @@ afterEach(() => { queryClient.clear(); localStorage.clear(); });
 const provider = { id: 'alldebrid', label: 'AllDebrid', configured: true, hosts: ['rg.to'], download_folder: '' };
 const link = { url: 'https://rg.to/file/example', kind: 'link' };
 
+it('RSS 标题链接到文章页面，不受下载主机筛选影响', async () => {
+  const served = serve();
+  Object.assign(served.state.items[0]!, { link: 'https://example.org/posts/example' });
+  served.state.sources[0]!.hide_unsupported = true;
+  const host = await mount(<QueryClientProvider client={queryClient}><RSSDownloads readOnly={false} toast={vi.fn()} /></QueryClientProvider>);
+  const title = host.querySelector<HTMLAnchorElement>('h4 a');
+  expect(title?.textContent).toBe('Example video');
+  expect(title?.href).toBe('https://example.org/posts/example');
+  expect(title?.target).toBe('_blank');
+  expect(title?.rel).toContain('noopener');
+});
+
+it.each([undefined, 'javascript:alert(1)'])('RSS 没有有效文章地址时保留普通标题：%s', async page => {
+  const served = serve();
+  Object.assign(served.state.items[0]!, { link: page });
+  const host = await mount(<QueryClientProvider client={queryClient}><RSSDownloads readOnly={false} toast={vi.fn()} /></QueryClientProvider>);
+  expect(host.querySelector('h4')?.textContent).toBe('Example video');
+  expect(host.querySelector('h4 a')).toBeNull();
+});
+
 it('NZB 保留扩展可读取的下载链接并单次提交 SABnzbd', async () => {
   const served = serve();
   const download = 'https://example.org/movie.nzb?key=example';

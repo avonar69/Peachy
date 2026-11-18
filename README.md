@@ -22,7 +22,7 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](#简体中文).
 
-Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
+Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Post titles open the original article. Clear finished hides completed, failed or cancelled tasks, including failed link preparation; Close dismisses the popup when no transfer or import is active. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
 
 Following → All includes RSS updates. Each RSS feed has its own automatic-update switch and interval, defaulting to 6 hours; turning it off keeps saved posts and allows manual refresh.
 
@@ -202,7 +202,7 @@ Peachy 是基于 [Peach](https://github.com/peach-mitao/peach) 的独立分支�
 
 时间轴缩略图任务显示独立进度与停止按钮，FFmpeg 按所选速度分配线程，任务取消后回收自身子进程。自动扫描只为本次新增且具备时长的视频生成时间轴，不检查已有影片；活动定向任务可追加下一次扫描的新作品，同一轮不重复尝试失败项。已保存的采样间隔和关闭开关继续生效。设置中的显式生成操作用于全库补缺或重新生成。播放器拖动预览按单格裁切图集，支持恢复播放和末张不足十行的预览图。详情见[性能选项与验证范围](docs/PERFORMANCE.md)。
 
-定制版本在关注管理提供 RSS 图文列表，展示主缩略图、全部预览图及带 AllDebrid／Real-Debrid 图标的下载链接。每个订阅可隐藏不支持的链接。在下载渠道保存密钥及可选目录；容器目录用于服务端下载，留空交给浏览器。设计边界见 [RSS 下载决策](docs/adr/0116-rss-debrid-downloads.md)。
+定制版本在关注管理提供 RSS 图文列表，展示主缩略图、全部预览图及带 AllDebrid／Real-Debrid 图标的下载链接，标题可打开原文章。「清除已结束」隐藏已完成、失败或取消的任务，包括链接准备失败；没有传输或导入在运行时可关闭浮层。每个订阅可隐藏不支持的链接。在下载渠道保存密钥及可选目录；容器目录用于服务端下载，留空交给浏览器。设计边界见 [RSS 下载决策](docs/adr/0116-rss-debrid-downloads.md)。
 
 关注页的「全部」包含 RSS 更新。每条 RSS 订阅可独立开启自动更新并设置间隔，默认 6 小时；关闭自动更新仍保留已取得条目，并可手工检查更新。
 
