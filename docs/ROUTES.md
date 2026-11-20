@@ -1,5 +1,7 @@
 # 页面路由
 
+目录规则的 `actors_from_subfolders` 为布尔值，默认 false，启用时须同时启用 `recursive`。保存和新文件继承均按视频直接所在的子目录名称建立演员关系；规则根目录直属视频和非视频不参与此项关联。关系使用目录规则来源，编辑或移除规则时可统一撤回，其他来源的出演关系保留。目录设置打开前重新读取已保存规则与修订号；新规则的页面默认 `future=true`，已保存值保持原值。
+
 `GET /api/entity` 与 `GET /api/index?kind=performers|studios` 的实体行包含 `scene_feedback`：`average_stars` 为有效已评分视频的平均星级（没有评分时为 null），`rated_count` 为评分视频数，`thumbs_up` 为本地喜欢数量，`thumbs_down` 为不喜欢数量。按视频 ID 去除重复关系，排除图片与非有效文件；厂牌范围包含子厂牌。详情评分、喜欢或不喜欢操作及其撤销会刷新资料页与名册查询。
 
 `POST /api/batch` 支持 `operation=studio|actor`，`name` 为非空且最多 200 字符的名称。厂牌更新与演员追加均使用手工归属；演员追加保留已有规范出演关系，事务失败整批回滚。`GET /api/items` 返回 `liked`，供卡片喜欢标记使用。

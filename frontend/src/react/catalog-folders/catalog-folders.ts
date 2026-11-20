@@ -8,6 +8,7 @@ export type FolderPurpose = 'category' | 'creator' | 'performer' | 'seller' | 's
 export interface FolderRule {
   id: string; location: string; path: string; purpose: FolderPurpose; name: string;
   entity_id: number | null; recursive: boolean; future: boolean;
+  actors_from_subfolders?: boolean;
   assignments?: { purpose: FolderPurpose; name: string; entity_id: number | null }[];
 }
 export interface FolderPage {

@@ -54,6 +54,10 @@ def validate(connection, node, body):
         raise ValueError('请选择目录用途')
     if not isinstance(body.get('recursive'), bool) or not isinstance(body.get('future'), bool):
         raise ValueError('目录范围与新文件设置须明确选择')
+    if not isinstance(body.get('actors_from_subfolders', False), bool):
+        raise ValueError('子目录演员设置须明确选择')
+    if body.get('actors_from_subfolders') and not body['recursive']:
+        raise ValueError('按子目录名称关联演员须启用应用到子文件夹')
     name = body.get('name', '')
     if not isinstance(name, str) or len(name) > 200:
         raise ValueError('关联名称最多 200 个字符')
@@ -74,7 +78,8 @@ def validate(connection, node, body):
         else:
             entity_id, canonical = entity['id'], entity['canonical_name']
     rule = {'id': node['id'], 'location': node['location'], 'path': node['path'], 'purpose': purpose,
-            'name': canonical, 'entity_id': entity_id, 'recursive': body['recursive'], 'future': body['future']}
+            'name': canonical, 'entity_id': entity_id, 'recursive': body['recursive'], 'future': body['future'],
+            'actors_from_subfolders': body.get('actors_from_subfolders', False)}
     assignments = body.get('assignments', {})
     if not isinstance(assignments, dict) or set(assignments) - {'studio', 'performers', 'series'}:
         raise ValueError('目录关联资料无效')
@@ -106,7 +111,7 @@ def associations(rule):
 def _asset_rows(connection, rule):
     clause, params = path_predicate(rule['location'], rule['path'], rule['recursive'])
     return [dict(row) for row in connection.execute(
-        "SELECT a.id,a.location,a.path,a.name,a.creator,a.studio,a.series,a.field_owners,a.mutation_revision "
+        "SELECT a.id,a.location,a.path,a.name,a.medium,a.creator,a.studio,a.series,a.field_owners,a.mutation_revision "
         "FROM asset a WHERE COALESCE(a.disposal,'') NOT IN ('trash','vanished') AND " + clause + ' ORDER BY a.id', params)]
 
 
@@ -148,7 +153,7 @@ def plan(connection, rule, data):
         reason = '由子目录规则管理' if chosen and chosen['id'] != rule['id'] else _conflict(connection, asset, rule, relations)
         rows.append({**asset, 'reason': reason, 'relations': relations})
     old = next((item for item in data['rules'] if item['id'] == rule['id']), None)
-    changing = old and any(old.get(key) != rule.get(key) for key in ('purpose', 'name', 'entity_id', 'recursive', 'assignments'))
+    changing = old and any(old.get(key) != rule.get(key) for key in ('purpose', 'name', 'entity_id', 'recursive', 'assignments', 'actors_from_subfolders'))
     previous = [dict(row) for row in connection.execute(
         'SELECT a.id,a.path,a.creator,a.studio,a.field_owners,a.mutation_revision,ae.entity_id,ae.role,ae.metadata_json '
         'FROM asset_entity ae JOIN asset a ON a.id=ae.asset_id WHERE ae.source=? ORDER BY a.id,ae.entity_id,ae.role',
@@ -166,6 +171,14 @@ def _link(connection, asset, rule):
         association = {**rule, **item}
         changed = _single_link(connection, asset, association) or changed
         item['entity_id'] = association['entity_id']
+    if rule.get('actors_from_subfolders') and asset.get('medium') == 'video':
+        parent = PureWindowsPath(asset['path']).parent
+        root = PureWindowsPath(rule['path'])
+        if parent != root and root in parent.parents:
+            name = canonicalize_entity_name('performer', parent.name)
+            if name and len(name) <= 200:
+                association = {**rule, 'purpose': 'performer', 'name': name, 'entity_id': None}
+                changed = _single_link(connection, asset, association) or changed
     return changed
 
 
@@ -232,7 +245,7 @@ def save(connection, settings, data, rule, preview, expected):
     if preview['plan_version'] != expected:
         raise FolderRuleConflict('目录内容或归属已变化，请重新预览')
     old = next((row for row in data['rules'] if row['id'] == rule['id']), None)
-    if old and any(old.get(key) != rule.get(key) for key in ('purpose', 'name', 'entity_id', 'recursive', 'assignments')):
+    if old and any(old.get(key) != rule.get(key) for key in ('purpose', 'name', 'entity_id', 'recursive', 'assignments', 'actors_from_subfolders')):
         withdraw(connection, old)
         preview = plan(connection, rule, data)
     applied = sum(_link(connection, row, rule) for row in preview['rows'] if not row['reason'])
@@ -269,7 +282,7 @@ def apply_new(connection, asset_ids):
             return 0
         count = 0
         for asset_id in asset_ids:
-            row = connection.execute('SELECT id,location,path,name,creator,studio,series,field_owners,mutation_revision '
+            row = connection.execute('SELECT id,location,path,name,medium,creator,studio,series,field_owners,mutation_revision '
                                      'FROM asset WHERE id=?', (asset_id,)).fetchone()
             if row is None:
                 continue

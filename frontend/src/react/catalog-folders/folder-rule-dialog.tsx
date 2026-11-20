@@ -32,13 +32,14 @@ export function FolderRuleDialog({ folder, rule, revision, close }: {
   const [purpose, setPurpose] = useState<FolderPurpose>(rule?.purpose || 'category');
   const [name, setName] = useState(rule?.name || '');
   const [recursive, setRecursive] = useState(rule?.recursive ?? true);
-  const [future, setFuture] = useState(rule?.future ?? false);
+  const [future, setFuture] = useState(rule?.future ?? true);
+  const [subfolderActors, setSubfolderActors] = useState(rule?.actors_from_subfolders ?? false);
   const [studio, setStudio] = useState(rule?.assignments?.find(item => item.purpose === 'studio')?.name || '');
   const [series, setSeries] = useState(rule?.assignments?.find(item => item.purpose === 'series')?.name || '');
   const [actors, setActors] = useState(rule?.assignments?.filter(item => item.purpose === 'performer').map(item => item.name).join('\n') || '');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const body = { folder: folder.id, purpose, name, recursive, future,
+  const body = { folder: folder.id, purpose, name, recursive, future, actors_from_subfolders: subfolderActors,
     assignments: { studio: purpose === 'studio' ? '' : studio, series: purpose === 'series' ? '' : series,
       performers: actors.split(/[\n,;]/).map(value => value.trim()).filter(Boolean) } };
   const dirty = () => { setPreview(null); action.setError(''); };
@@ -91,7 +92,9 @@ export function FolderRuleDialog({ folder, rule, revision, close }: {
         <label className="flex min-w-0 flex-col gap-2"><span>Actors, one per line</span>
           <textarea aria-label="Actors, one per line" rows={3} className="min-w-0 rounded-lg border border-separator-border p-3"
             value={actors} disabled={busy} onChange={event => { setActors(event.target.value); dirty() }} /></label>
-        <Checkbox isSelected={recursive} isDisabled={busy} onChange={value => { setRecursive(value); dirty() }}>应用到子文件夹</Checkbox>
+        <Checkbox isSelected={recursive} isDisabled={busy} onChange={value => { setRecursive(value); if (!value) setSubfolderActors(false); dirty() }}>应用到子文件夹</Checkbox>
+        <Checkbox isSelected={subfolderActors} isDisabled={busy} onChange={value => { setSubfolderActors(value); if (value) setRecursive(true); dirty() }}>以视频所在子文件夹名称关联演员</Checkbox>
+        <p className="text-body-2-regular text-text-secondary">例如 Alex 子文件夹中的视频关联演员 Alex。当前目录直属视频不按目录名称关联演员，已有演员关联保留。</p>
         <Checkbox isSelected={future} isDisabled={busy} onChange={value => { setFuture(value); dirty() }}>新文件沿用此规则</Checkbox>
         {preview ? <section aria-label="目录用途影响范围" className="flex flex-col gap-3">
           <p className="text-body-medium">{preview.total} 项 · 可应用 {preview.applicable} 项{preview.conflicts.length ? ` · 保留现有归属 ${preview.conflicts.length} 项` : ''}</p>
