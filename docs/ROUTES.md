@@ -34,7 +34,7 @@ StashDB 场景标签写入 `asset_tag` 并经 `upsert_asset_entity(kind='tag',ro
 
 `GET /api/scene-metadata?id=` 返回原始作品字段、完整演员名单与 `mutation_revision`。`POST /api/scene-metadata` 接受 `id`、`expected_revision`、`values` 和可选的 `performers` 数组；空数组表示手工清空演员。可选 `cover`、`thumbnail` 为最多 6 MB 的单张图片的 Base64 数据，解码后最多 2400 万像素，按作品保存独立封面键。写入经字段归属、乐观并发及标准鉴权／只读门槛。
 
-资料编辑窗口通过 `POST /api/metadata-job` 提交 `kind`（`scene`、`folder`、`batch`）及原写入契约的 `payload`。服务端保存固定选择集并返回 `job_id`，`GET /api/metadata-job` 返回状态、完成数、总数及终态结果；同一时刻只接收一项资料任务。批量厂牌和演员每批处理 200 项，失败保留已完成数，任务浮层提供重试。目录规则的 `assignments` 接受 `studio`、`series` 和 `performers`，与目录用途一起预览、撤回及继承。`GET /api/folders/selection?folder=` 返回目录内全部在库视频 ID，`folder_recursive=0` 限定当前层，不受作品分页限制。
+资料编辑窗口通过 `POST /api/metadata-job` 提交 `kind`（`scene`、`folder`、`batch`）及原写入契约的 `payload`。服务端为每次提交保存固定选择集并返回独立 `job_id`，按提交顺序串行应用资料，最多容纳 100 项等待任务。`GET /api/metadata-job?job_id=` 返回该项状态、完成数、总数、排队位置及终态结果；不带 `job_id` 返回 `jobs` 清单。等待状态为 `queued`，一项失败后继续后续编辑。浏览器按任务身份分别保存通知观察记录，刷新后逐项恢复查询。队列随服务进程运行，关停时取消等待项并等待当前项收工。批量厂牌和演员每批处理 200 项，失败保留已完成数，任务浮层提供重试。目录规则的 `assignments` 接受 `studio`、`series` 和 `performers`，与目录用途一起预览、撤回及继承。`GET /api/folders/selection?folder=` 返回目录内全部在库视频 ID，`folder_recursive=0` 限定当前层，不受作品分页限制。
 
 `POST /api/rematch-metadata` 接受 `kind=scene|performer|studio` 与 `id`。作品启动 `stage=rematch` 的定向资料任务，要求明确的 `asset_ids`，不发现新文件或生成视频预览；沿用任务状态、暂停、恢复、停止与复核入口，重查已配置来源且保留手工字段。演员与厂牌只请求当前 StashDB 身份，不查询作品。手工演员列表的归属保存在 `field_owners.performers`，自动资料、文件名及 StashDB 匹配均尊重该归属。
 

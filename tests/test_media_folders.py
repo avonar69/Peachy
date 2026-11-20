@@ -8,7 +8,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from peach import folder_rules, media_folders, scan, web_folders, web_metadata_jobs
-from peach.jobs import JobAlreadyRunning
 from peach.entities import upsert_asset_entity
 from peach.field_owners import write_owned_fields
 from peach.migrations import upgrade
@@ -27,6 +26,7 @@ class MediaFolderTests(unittest.TestCase):
         upgrade(self.path, ROOT / 'migrations')
         self.contract = WebContract(self.path, candidate_root=self.root / 'generated',
                                     follow_state_root=self.root / 'state', snapshot_root=self.root / 'snapshots')
+        self.addCleanup(self.contract.metadata_queue.close)
         self.config = SimpleNamespace(locations={'local': ('R:\\Media',), '115': ('A:\\收藏',)},
                                       library_names={}, library_icons={})
         self.addCleanup(patch.stopall)
@@ -44,6 +44,10 @@ class MediaFolderTests(unittest.TestCase):
 
     def read(self, **args):
         return web_folders.q_folders(self.contract, args)
+
+    def edit_result(self, state):
+        self.contract.metadata_queue.futures[state['job_id']].result(timeout=20)
+        return web_metadata_jobs.q_metadata_job(self.contract, {'job_id': state['job_id']})
 
     def rule(self, **extra):
         return {'folder': self.key(), 'purpose': 'creator', 'name': '作者甲',
@@ -136,45 +140,61 @@ class MediaFolderTests(unittest.TestCase):
         ids = web_folders.q_folder_selection(self.contract, {'folder': self.key()})['ids']
         state = web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
             'ids': ids, 'operation': 'actor', 'name': 'Jane Doe'}})
-        self.contract.metadata_job.thread.join(20)
-        result = web_metadata_jobs.q_metadata_job(self.contract, {})
+        result = self.edit_result(state)
         self.assertEqual(result['job_id'], state['job_id'])
         self.assertEqual((result['status'], result['checked'], result['total']), ('complete', 252, 252))
         with self.contract.read_connection() as connection:
             self.assertEqual(connection.execute("SELECT count(*) FROM asset_entity ae JOIN entity e ON e.id=ae.entity_id WHERE e.canonical_name='Jane Doe'").fetchone()[0], 252)
-        web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
+        state = web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
             'ids': ids, 'operation': 'studio', 'name': 'Folder Studio'}})
-        self.contract.metadata_job.thread.join(20)
-        self.assertEqual(web_metadata_jobs.q_metadata_job(self.contract, {})['status'], 'complete')
+        self.assertEqual(self.edit_result(state)['status'], 'complete')
         with self.contract.read_connection() as connection:
             self.assertEqual(connection.execute("SELECT count(*) FROM asset WHERE studio='Folder Studio'").fetchone()[0], 252)
 
-    def test_busy_metadata_job_rejects_another_edit_and_exposes_failure(self):
+    def test_edits_wait_in_submission_order_and_continue_after_failure(self):
         entered, release = threading.Event(), threading.Event()
-        def work(*args):
-            entered.set()
-            release.wait(10)
-            raise ValueError('test edit failure')
+        applied = []
+        def work(contract, payload):
+            applied.append((payload['name'], tuple(payload['ids'])))
+            if payload['name'] == 'First':
+                entered.set()
+                release.wait(10)
+                raise ValueError('test edit failure')
+            return {'ok': True}
         with patch('peach.web_batch.w_batch', side_effect=work):
-            body = {'kind': 'batch', 'payload': {'ids': [1], 'operation': 'actor', 'name': 'Jane Doe'}}
-            web_metadata_jobs.w_metadata_job(self.contract, body)
+            body = {'kind': 'batch', 'payload': {'ids': [1], 'operation': 'actor', 'name': 'First'}}
+            first = web_metadata_jobs.w_metadata_job(self.contract, body)
             try:
                 self.assertTrue(entered.wait(5))
-                with self.assertRaises(JobAlreadyRunning):
-                    web_metadata_jobs.w_metadata_job(self.contract, body)
+                body['payload']['name'] = 'Second'
+                body['payload']['ids'] = [2]
+                second = web_metadata_jobs.w_metadata_job(self.contract, body)
+                body['payload']['name'] = 'Third'
+                body['payload']['ids'] = [3]
+                third = web_metadata_jobs.w_metadata_job(self.contract, body)
+                body['payload']['name'] = 'Changed after submission'
+                body['payload']['ids'][0] = 4
+                self.assertEqual((second['status'], second['queue_position']), ('queued', 1))
+                self.assertEqual((third['status'], third['queue_position']), ('queued', 2))
+                self.assertEqual(applied, [('First', (1,))])
             finally:
                 release.set()
-                self.contract.metadata_job.thread.join(10)
-        result = web_metadata_jobs.q_metadata_job(self.contract, {})
+                result = self.edit_result(first)
+                second_result = self.edit_result(second) if 'second' in locals() else None
+                third_result = self.edit_result(third) if 'third' in locals() else None
         self.assertEqual(result['status'], 'failed')
         self.assertIn('test edit failure', result['error'])
+        self.assertEqual(second_result['status'], 'complete')
+        self.assertEqual(third_result['status'], 'complete')
+        self.assertEqual(applied, [('First', (1,)), ('Second', (2,)), ('Third', (3,))])
+        self.assertEqual(len({first['job_id'], second['job_id'], third['job_id']}), 3)
+        self.assertEqual(len(web_metadata_jobs.q_metadata_job(self.contract, {})['jobs']), 3)
 
     def test_failed_batch_retains_actual_completed_count(self):
         with patch('peach.web_batch.w_batch', side_effect=[{'ok': True}, ValueError('second batch failed')]) as apply:
-            web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
+            state = web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
                 'ids': list(range(1, 253)), 'operation': 'actor', 'name': 'Jane Doe'}})
-            self.contract.metadata_job.thread.join(10)
-        result = web_metadata_jobs.q_metadata_job(self.contract, {})
+            result = self.edit_result(state)
         self.assertEqual((result['status'], result['checked'], result['total']), ('failed', 200, 252))
         self.assertEqual([len(call.args[1]['ids']) for call in apply.call_args_list], [200, 52])
 

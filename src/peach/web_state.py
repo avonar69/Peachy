@@ -210,6 +210,8 @@ class WebContract:
         # 整理（ADR-0039）：同一时间只跑一批，互斥由这个任务自己的键提供。
         self.organize_job = self._job("PeachOrganizeJob", "organize")
         self.metadata_job = self._job("PeachMetadataJob", "metadata-edit")
+        from .web_metadata_jobs import MetadataEditQueue
+        self.metadata_queue = MetadataEditQueue(self.metadata_job)
         self.follow_scheduler = None
         #: 关注卡缩略图的画面签名缓存（`follow_faces.FollowFaceIndex`），由 `api` 接上；
         #: 裸契约不联网，组里只按缩略图地址认同一张。
@@ -336,6 +338,7 @@ class WebContract:
 
         谁在跑归契约自己知道，`api` 的 lifespan 不该再列一遍任务清单。
         """
+        self.metadata_queue.close()
         self.resource_scan.stop()
         self.follow_job.stop()
         self.scraping_cover_job.stop()

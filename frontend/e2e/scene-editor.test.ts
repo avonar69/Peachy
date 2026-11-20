@@ -15,7 +15,7 @@ describe('Scene metadata controls', () => {
     const posts: Array<Record<string, unknown>> = [];
     const item = await page.evaluate(async id => (await fetch(`/api/item?id=${id}`)).json(), ITEM.plain);
     let edit: Record<string, unknown> | undefined;
-    await page.route('**/api/metadata-job', async route => {
+    await page.route('**/api/metadata-job*', async route => {
       if (route.request().method() === 'POST') {
         const body = route.request().postDataJSON(); edit = body.payload; posts.push(body);
         await route.fulfill({ json: { job_id: 'scene-save', status: 'running', total: 1, checked: 0 } });

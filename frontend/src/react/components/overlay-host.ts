@@ -32,10 +32,11 @@ export function followModalLayer(host: HTMLElement): () => void {
   const place = () => {
     const dialogs = [...document.querySelectorAll<HTMLDialogElement>('dialog[open]')];
     const target = dialogs.at(-1) || document.body;
+    host.hidden = dialogs.some(dialog => dialog.id !== 'stage') || !!document.querySelector('[data-modal-surface]');
     if (host.parentElement !== target) target.append(host);
   };
   const observer = new MutationObserver(place);
   observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'], childList: true });
   place();
-  return () => { observer.disconnect(); document.body.append(host) };
+  return () => { observer.disconnect(); host.hidden = false; document.body.append(host) };
 }

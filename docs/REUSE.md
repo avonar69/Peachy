@@ -807,7 +807,7 @@ NZBGet 采用[官方 JSON-RPC 协议](https://nzbget.com/documentation/api/)的 
 
 忽略词匹配复用标准库 `re.escape`／大小写不敏感替换与 `PureWindowsPath`，本地文件名和 StashDB 提示共用字面清洗规则。定向重匹配复用既有 Aho–Corasick 演员索引、按来源归属写入、StashDB 查询及统一处理任务的停止／恢复；不增加扫描器、抽帧或网络依赖。Following 刷新复用两个既有检查端点和来源时间戳，手机控件复用播放器活动状态、全屏控件与紧凑布局。没有新增依赖。
 
-目录跨页选择复用 `media_folders.path_predicate` 的来源与路径边界，不读取媒体文件。目录多项资料复用 `folder_rules` 的独立来源、预览版本和扫描继承；厂牌、系列与演员使用既有实体关系及字段投影。资料保存复用 `BackgroundJob`、`watchJob`、Sonner 与 `TaskPopup`，批量资料按每批 200 项使用既有写入契约；部分批次失败保留实际完成数，成功终态刷新馆藏。没有新增依赖。
+目录跨页选择复用 `media_folders.path_predicate` 的来源与路径边界，不读取媒体文件。目录多项资料复用 `folder_rules` 的独立来源、预览版本和扫描继承；厂牌、系列与演员使用既有实体关系及字段投影。资料保存复用 `BackgroundJob`、`watchJob`、Sonner 与 `TaskPopup`，批量资料按每批 200 项使用既有写入契约；部分批次失败保留实际完成数，成功终态刷新馆藏。编辑入队复用当前 Python 标准库 `ThreadPoolExecutor(max_workers=1)`，沿用既有媒体探测、资料处理及 API 线程池的生命周期模式；Peach 只保存独立身份、固定输入、排队位置与通知观察记录。工作者依次等待 `BackgroundJob` 完整结算，一项失败不阻断后续项。没有新增依赖。
 
 ## 演员批量合并与撤销
 

@@ -1,4 +1,4 @@
-import { useSyncExternalStore, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { AnimatePresence, motion, useIsPresent } from 'motion/react';
 import { useFocusVisible } from 'react-aria';
 
@@ -19,12 +19,26 @@ interface SelectionDockProps {
 
 function DockSurface({ children, count, label }: Omit<SelectionDockProps, 'visible'>) {
   const present = useIsPresent();
+  const element = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const update = () => {
+      const docks = [...document.querySelectorAll<HTMLElement>('[data-selection-dock]:not([inert])')];
+      const offset = Math.max(0, ...docks.map(dock => dock.offsetHeight + (parseFloat(getComputedStyle(dock).bottom) || 0) + 8));
+      if (offset) document.documentElement.style.setProperty('--selection-toast-bottom', `${offset}px`);
+      else document.documentElement.style.removeProperty('--selection-toast-bottom');
+    };
+    const observer = new ResizeObserver(update);
+    if (element.current) observer.observe(element.current);
+    window.addEventListener('resize', update);
+    update();
+    return () => { observer.disconnect(); window.removeEventListener('resize', update); queueMicrotask(update); };
+  }, [present]);
   const reduce = useSyncExternalStore(subscribeReduce, readReduce, () => false);
   const { isFocusVisible } = useFocusVisible();
   const instant = reduce || isFocusVisible;
   const hidden = { opacity: 0, transform: 'translate(-50%, 8px)' };
   return (
-    <motion.div role="group" aria-label={label} data-selection-dock data-glass-pane=""
+    <motion.div ref={element} role="group" aria-label={label} data-selection-dock data-glass-pane=""
       inert={!present} aria-hidden={!present || undefined}
       initial={instant ? false : hidden}
       animate={{ opacity: 1, transform: 'translate(-50%, 0px)' }}
