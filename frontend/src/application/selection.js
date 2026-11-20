@@ -93,7 +93,7 @@ async function editBatchMetadata(operation){
     onConfirm:async()=>{
       const name=modal.dialog.querySelector('[name="metadata-name"]').value.trim();
       if(!name)throw new Error('Enter a valid name.');
-      void startMetadataEdit('batch',{ids,operation,name},()=>{setSelectMode(false,true);void reloadAfterWrite()});
+      void startMetadataEdit('batch',{ids,operation,name},()=>{void reloadAfterWrite()});
       return {queued:true};
     }});
   const result=await modal.done;

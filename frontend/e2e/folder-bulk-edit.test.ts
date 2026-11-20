@@ -61,13 +61,22 @@ describe('文件夹跨页资料编辑', () => {
       assert.equal(submissions[0].payload.ids.length, 45);
       assert.equal(submissions[1].payload.ids.length, 1);
       assert.equal(submissions[1].payload.name, 'Queued Actor');
+      for (const collapse of await page.locator('[data-processing-dock]').getByRole('button', { name: '收起任务详情', exact: true }).all()) {
+        await collapse.click();
+      }
+      await page.locator('[data-catalog-row]').first().locator('label').click();
+      await page.locator('[data-batch-action="actor"]').waitFor({ state: 'visible' });
       completed = true;
       await popup.getByText('资料已保存').waitFor();
+      await page.locator('[data-catalog-row][data-board-selected]').first().waitFor();
+      assert.equal(await page.locator('[data-catalog-row][data-board-selected]').count(), 1);
       await popup.getByRole('button', { name: '关闭', exact: true }).click();
       await popup.waitFor({ state: 'hidden' });
       await queued.getByText('正在应用编辑').waitFor();
       secondCompleted = true;
       await queued.getByText('资料已保存').waitFor();
+      await page.locator('[data-catalog-row][data-board-selected]').first().waitFor();
+      assert.equal(await page.locator('[data-catalog-row][data-board-selected]').count(), 1);
       await queued.getByRole('button', { name: '关闭', exact: true }).click();
       await queued.waitFor({ state: 'hidden' });
       assert.deepEqual(opened.problems.filter(problem => problem.startsWith('pageerror')), []);
