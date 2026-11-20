@@ -10,7 +10,8 @@ beforeEach(() => localStorage.setItem('peach.language', 'en'));
 it('编辑场景只提交变更字段并保留完整演员名', async () => {
   const posts: unknown[] = [];
   vi.stubGlobal('fetch', vi.fn(async (_url: string, options?: RequestInit) => {
-    if (options?.method === 'POST') { posts.push(JSON.parse(String(options.body))); return new Response(JSON.stringify({ item: { id: 7 } })); }
+    if (options?.method === 'POST') { posts.push(JSON.parse(String(options.body))); return new Response(JSON.stringify({ job_id: 'edit-one', status: 'running' })); }
+    if (_url.includes('/api/metadata-job')) return new Response(JSON.stringify({ job_id: 'edit-one', status: 'complete', result: { item: { id: 7 } } }));
     return new Response(JSON.stringify({ catalog_title: 'Original', studio: 'Studio', mutation_revision: 5, performers: ['Jane Doe'] }));
   }));
   const saved = vi.fn();
@@ -24,7 +25,8 @@ it('编辑场景只提交变更字段并保留完整演员名', async () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await click(buttonNamed('Save scene', dialog));
-  expect(posts).toEqual([{ id: 7, expected_revision: 5, values: { catalog_title: 'New title' }, performers: ['Clara Fargo', 'Jane Doe'] }]);
+  expect(posts).toEqual([{ kind: 'scene', payload: { id: 7, expected_revision: 5, values: { catalog_title: 'New title' }, performers: ['Clara Fargo', 'Jane Doe'] } }]);
+  expect(document.querySelector('[role="dialog"]')).toBeNull();
   expect(saved).toHaveBeenCalledWith({ id: 7 });
 });
 

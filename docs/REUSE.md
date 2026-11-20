@@ -807,6 +807,8 @@ NZBGet 采用[官方 JSON-RPC 协议](https://nzbget.com/documentation/api/)的 
 
 忽略词匹配复用标准库 `re.escape`／大小写不敏感替换与 `PureWindowsPath`，本地文件名和 StashDB 提示共用字面清洗规则。定向重匹配复用既有 Aho–Corasick 演员索引、按来源归属写入、StashDB 查询及统一处理任务的停止／恢复；不增加扫描器、抽帧或网络依赖。Following 刷新复用两个既有检查端点和来源时间戳，手机控件复用播放器活动状态、全屏控件与紧凑布局。没有新增依赖。
 
+目录跨页选择复用 `media_folders.path_predicate` 的来源与路径边界，不读取媒体文件。目录多项资料复用 `folder_rules` 的独立来源、预览版本和扫描继承；厂牌、系列与演员使用既有实体关系及字段投影。资料保存复用 `BackgroundJob`、`watchJob`、Sonner 与 `TaskPopup`，批量资料按每批 200 项使用既有写入契约；部分批次失败保留实际完成数，成功终态刷新馆藏。没有新增依赖。
+
 ## 演员批量合并与撤销
 
 卡片角标复用 Remix Icon，续播进度复用播放器 `playbackPosition`。批量演员及厂牌复用作品编辑的 `_relations` 和 `write_owned_fields`，最近入库匹配复用统一处理任务与固定资产范围；传输速度复用下载器已有字节进度和标准库单调时钟。没有新增依赖，浏览器下载回执只表示交接成功，不推断文件保存完成。

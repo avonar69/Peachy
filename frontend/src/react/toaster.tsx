@@ -10,6 +10,8 @@ import { Toaster, toast } from 'sonner';
 
 import type * as Bundle from './bundle';
 import { Providers } from './providers';
+import { MetadataEditRecovery } from './components/metadata-edit-progress';
+import { followModalLayer } from './components/overlay-host';
 
 /* 成功那一枚勾自己画出来（`src/ui-kit/motion.css` 的 `[data-toast-glyph=draw]`），失败那一枚
    不画：错误要的是立刻看清。字形由遗留层的 `icon()` 给，和全站其余图标同一套描边件。 */
@@ -17,7 +19,7 @@ const glyph = (html: string, draw: boolean) => (
   <span data-toast-glyph={draw ? 'draw' : 'still'} aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />
 );
 
-let mounted: { host: Element; root: Root } | null = null;
+let mounted: { host: Element; root: Root; restore(): void } | null = null;
 /* Agent Progress 的 rounded-2xl 外框，沿用现有半径 token 并限定在通知栈内。 */
 const FRAME = { '--floating-radius': 'var(--radius-2xl)' } as CSSProperties;
 
@@ -26,17 +28,18 @@ export function unmountToaster(): void {
   const current = mounted;
   mounted = null;
   current?.root.unmount();
+  current?.restore();
 }
 
 export const mountToaster: typeof Bundle.mountToaster = (host, icons) => {
   if (mounted?.host === host) return;
   unmountToaster();
   const root = createRoot(host);
-  mounted = { host, root };
+  mounted = { host, root, restore: followModalLayer(host as HTMLElement) };
   /* 底边读 `--toast-bottom`：教程卡在右下角时，遗留层把它写成卡上沿之上的位置；没写就是
      Sonner 的默认边距。栈为长回执留出空间，每条回执的宽度由内容决定。 */
   root.render(
-    <Providers><Toaster id="receipts" position="bottom-right" closeButton gap={8}
+    <Providers><MetadataEditRecovery /><Toaster id="receipts" position="bottom-right" closeButton gap={8}
       style={{ ...FRAME, '--width': 'min(560px, calc(100vw - 48px))' } as CSSProperties}
       offset={{ right: 24, bottom: 'calc(var(--toast-bottom, 24px) + var(--processing-toast-space, 0px))' }}
       mobileOffset={{ right: 16, left: 16, bottom: 'calc(var(--toast-bottom, 16px) + var(--processing-toast-space, 0px))' }}

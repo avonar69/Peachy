@@ -9,6 +9,9 @@ import {
 import { cardArtwork, relayoutCovers } from '@peach/card-art';
 import { fmtDur, fmtSize, requestErrorMessage } from '@peach/legacy/core';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
+import { Button } from '@/components/base/buttons/button';
+import { Note } from '../components/note';
+import { useAction, busyProps } from '../settings/use-action';
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@/components/base/table/table';
 import { ChevronSortDown } from '@/components/foundations/icons/chevrons';
 import { apiGet } from '../../api';
@@ -35,6 +38,7 @@ const positions = new Map<string, ListState>();
 
 /** 服务端对完整筛选结果排序、分页；选择集及批量栏归现有馆藏控制器。 */
 export function CatalogListPage(props: CatalogGridProps) {
+  const folderAction = useAction();
   const params = catalogParams(props.filters || {}, false);
   const [scope] = useState(() => {
     const position = new URLSearchParams(params);
@@ -65,6 +69,15 @@ export function CatalogListPage(props: CatalogGridProps) {
   });
   const items = result.data?.items || [];
   const total = Number(result.data?.total || 0);
+  const folder = props.filters?.folder;
+  const allShown = items.length > 0 && items.every(item => props.selected.has(item.id));
+  const selectFolder = () => {
+    const query = new URLSearchParams({ folder: folder!, folder_recursive: props.filters?.folder_recursive || '1',
+      loc: props.filters?.loc || '', library: props.filters?.library || '' });
+    void folderAction.run('select', signal => apiGet<{ ids: number[] }>(`/api/folders/selection?${query}`, signal),
+      data => { if (props.actions.selectMany) props.actions.selectMany(data.ids);
+        else data.ids.filter(id => !props.selected.has(id)).forEach(id => props.actions.toggleSelection(id, false)); });
+  };
   useLayoutEffect(() => {
     if (result.isFetching) return;
     let live = true;
@@ -124,6 +137,11 @@ export function CatalogListPage(props: CatalogGridProps) {
       <DataTableSort label="作品列表" options={sortOptions} sorting={sorting}
         onChange={next => table.setSorting(next)} />
     </div>
+    {folder && allShown ? <div className="flex flex-wrap items-center gap-2" role="region" aria-label="文件夹选择范围">
+      <span>已选择本页作品</span><Button size="small" variant="secondary" {...busyProps(!!folderAction.busy)}
+        onClick={selectFolder}>选择文件夹中的全部作品</Button>
+    </div> : null}
+    {folderAction.error ? <Note tone="error">{folderAction.error}</Note> : null}
     <LibraryCompletionPrompt assetIds={props.filters?.state === 'trash' ? [] : missingPreviewIds(items, props.layout.javImage)} />
     {result.isError ? <RetryNote message={requestErrorMessage(result.error)} onRetry={() => void result.refetch()} /> : null}
     <DataTableFrame follow onRowClick={id => { if (!result.isPlaceholderData) props.actions.toggleSelection(Number(id), false) }}>

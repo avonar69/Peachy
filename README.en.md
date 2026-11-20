@@ -10,6 +10,8 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 ## Peachy features
 
+Folder lists support selecting every video across pages. Directory rules can combine a studio, series and multiple actors, apply to subfolders, and carry those assignments to new files. Scene and folder saves close the editor immediately and show progress or errors in the background-task popup.
+
 - **Languages and LAN access:** English by default, with Simplified/Traditional Chinese, Vietnamese, Japanese, Korean, German, Spanish, French and Portuguese. Settings, tasks, diagnostics and review screens are localized; LAN connections and ordinary HTTP origins are supported.
 - **StashDB matching and review:** Combines filename, actor folder, studio, release date, duration and optional OSHASH evidence. Includes ignored text, adjustable confidence, quick application of saved scores, recent-media retries, a shared review queue and separate actor/studio/scene resync with manual edits protected.
 - **Actor and studio information:** Actor photos, aliases, biographical details and scene tags; actor merging with backup and undo. Profiles and browsing cards show your average scene rating and thumbs-up/down totals, excluding unrated videos from the average.

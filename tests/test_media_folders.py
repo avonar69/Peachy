@@ -1,12 +1,14 @@
 """原目录的来源边界、目录规则预览、撤回与扫描继承。"""
 import json
+import threading
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from peach import folder_rules, media_folders, scan, web_folders
+from peach import folder_rules, media_folders, scan, web_folders, web_metadata_jobs
+from peach.jobs import JobAlreadyRunning
 from peach.entities import upsert_asset_entity
 from peach.field_owners import write_owned_fields
 from peach.migrations import upgrade
@@ -86,6 +88,95 @@ class MediaFolderTests(unittest.TestCase):
         with self.contract.read_connection() as connection:
             self.assertEqual(connection.execute('SELECT count(*) FROM asset_entity').fetchone()[0], 0)
         self.assertEqual(self.read(folder=self.key())['rule']['purpose'], 'category')
+
+    def test_selection_covers_all_folder_pages_with_path_and_source_boundaries(self):
+        with self.contract.write_transaction() as connection:
+            connection.executemany("INSERT INTO asset(location,path,name,medium) VALUES('local',?,?,'video')",
+                [(f'R:\\Media\\精选\\作者甲\\{i}.mp4', f'{i}.mp4') for i in range(250)])
+            connection.execute("INSERT INTO asset(location,path,name,medium,disposal) VALUES('local',?,'trash.mp4','video','trash')",
+                ('R:\\Media\\精选\\作者甲\\trash.mp4',))
+        result = web_folders.q_folder_selection(self.contract, {'folder': self.key()})
+        self.assertEqual(result['total'], 252)
+        self.assertNotIn(3, result['ids'])
+        self.assertNotIn(4, result['ids'])
+        direct = web_folders.q_folder_selection(self.contract, {'folder': self.key(), 'folder_recursive': '0'})
+        self.assertEqual(direct['total'], 251)
+        with self.assertRaises(ValueError):
+            web_folders.q_folder_selection(self.contract, {'folder': 'missing'})
+
+    def test_directory_metadata_applies_to_existing_and_future_items_and_withdraws(self):
+        extra = {'studio': 'Studio One', 'series': 'Series One', 'performers': ['Jane Doe', 'Clara Fargo']}
+        self.save(purpose='category', name='', future=True, assignments=extra)
+        with self.contract.write_transaction() as connection:
+            connection.execute("INSERT INTO asset(location,path,name,medium) VALUES('local',?,'new.mp4','video')",
+                ('R:\\Media\\精选\\作者甲\\视频\\new.mp4',))
+            self.assertEqual(folder_rules.apply_new(connection, [5]), 1)
+            self.assertEqual(connection.execute('SELECT studio,series FROM asset WHERE id=5').fetchone()[:], ('Studio One', 'Series One'))
+            names = {row[0] for row in connection.execute('SELECT e.canonical_name FROM entity e JOIN asset_entity ae ON ae.entity_id=e.id WHERE ae.asset_id=5')}
+            self.assertTrue({'Jane Doe', 'Clara Fargo', 'Studio One', 'Series One'} <= names)
+            self.assertEqual(folder_rules.apply_new(connection, [5]), 0)
+        revision = self.read()['rules_revision']
+        web_folders.w_folder_rule(self.contract, {'folder': self.key(), 'action': 'remove', 'expected_revision': revision})
+        with self.contract.read_connection() as connection:
+            self.assertEqual(connection.execute('SELECT count(*) FROM asset_entity').fetchone()[0], 0)
+            self.assertFalse(connection.execute('SELECT studio FROM asset WHERE id=5').fetchone()[0])
+
+    def test_directory_actor_assignment_preserves_other_cast(self):
+        with self.contract.write_transaction() as connection:
+            upsert_asset_entity(connection, kind='performer', name='Existing Actor', asset_id=1, role='performer', source='user:manual')
+        self.save(purpose='category', name='', assignments={'performers': ['Added Actor']})
+        with self.contract.read_connection() as connection:
+            names = {row[0] for row in connection.execute("SELECT e.canonical_name FROM entity e JOIN asset_entity ae ON ae.entity_id=e.id WHERE ae.asset_id=1")}
+            self.assertEqual(names, {'Existing Actor', 'Added Actor'})
+
+    def test_background_metadata_applies_large_frozen_selection_in_bounded_groups(self):
+        with self.contract.write_transaction() as connection:
+            connection.executemany("INSERT INTO asset(location,path,name,medium) VALUES('local',?,?,'video')",
+                [(f'R:\\Media\\精选\\作者甲\\{i}.mp4', f'{i}.mp4') for i in range(250)])
+        ids = web_folders.q_folder_selection(self.contract, {'folder': self.key()})['ids']
+        state = web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
+            'ids': ids, 'operation': 'actor', 'name': 'Jane Doe'}})
+        self.contract.metadata_job.thread.join(20)
+        result = web_metadata_jobs.q_metadata_job(self.contract, {})
+        self.assertEqual(result['job_id'], state['job_id'])
+        self.assertEqual((result['status'], result['checked'], result['total']), ('complete', 252, 252))
+        with self.contract.read_connection() as connection:
+            self.assertEqual(connection.execute("SELECT count(*) FROM asset_entity ae JOIN entity e ON e.id=ae.entity_id WHERE e.canonical_name='Jane Doe'").fetchone()[0], 252)
+        web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
+            'ids': ids, 'operation': 'studio', 'name': 'Folder Studio'}})
+        self.contract.metadata_job.thread.join(20)
+        self.assertEqual(web_metadata_jobs.q_metadata_job(self.contract, {})['status'], 'complete')
+        with self.contract.read_connection() as connection:
+            self.assertEqual(connection.execute("SELECT count(*) FROM asset WHERE studio='Folder Studio'").fetchone()[0], 252)
+
+    def test_busy_metadata_job_rejects_another_edit_and_exposes_failure(self):
+        entered, release = threading.Event(), threading.Event()
+        def work(*args):
+            entered.set()
+            release.wait(10)
+            raise ValueError('test edit failure')
+        with patch('peach.web_batch.w_batch', side_effect=work):
+            body = {'kind': 'batch', 'payload': {'ids': [1], 'operation': 'actor', 'name': 'Jane Doe'}}
+            web_metadata_jobs.w_metadata_job(self.contract, body)
+            try:
+                self.assertTrue(entered.wait(5))
+                with self.assertRaises(JobAlreadyRunning):
+                    web_metadata_jobs.w_metadata_job(self.contract, body)
+            finally:
+                release.set()
+                self.contract.metadata_job.thread.join(10)
+        result = web_metadata_jobs.q_metadata_job(self.contract, {})
+        self.assertEqual(result['status'], 'failed')
+        self.assertIn('test edit failure', result['error'])
+
+    def test_failed_batch_retains_actual_completed_count(self):
+        with patch('peach.web_batch.w_batch', side_effect=[{'ok': True}, ValueError('second batch failed')]) as apply:
+            web_metadata_jobs.w_metadata_job(self.contract, {'kind': 'batch', 'payload': {
+                'ids': list(range(1, 253)), 'operation': 'actor', 'name': 'Jane Doe'}})
+            self.contract.metadata_job.thread.join(10)
+        result = web_metadata_jobs.q_metadata_job(self.contract, {})
+        self.assertEqual((result['status'], result['checked'], result['total']), ('failed', 200, 252))
+        self.assertEqual([len(call.args[1]['ids']) for call in apply.call_args_list], [200, 52])
 
     def test_preview_is_read_only_and_save_projects_with_own_source(self):
         preview = web_folders.w_folder_preview(self.contract, self.rule())

@@ -25,3 +25,17 @@ export function overlayHost(node: Element | null | undefined): HTMLElement {
   const modal = node?.closest('dialog[open]');
   return hostIn((modal as HTMLElement | null) ?? document.body);
 }
+
+/** 通知栈随原生模态层移动，关闭详情后回到页面。 */
+export function followModalLayer(host: HTMLElement): () => void {
+  const document = host.ownerDocument;
+  const place = () => {
+    const dialogs = [...document.querySelectorAll<HTMLDialogElement>('dialog[open]')];
+    const target = dialogs.at(-1) || document.body;
+    if (host.parentElement !== target) target.append(host);
+  };
+  const observer = new MutationObserver(place);
+  observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'], childList: true });
+  place();
+  return () => { observer.disconnect(); document.body.append(host) };
+}

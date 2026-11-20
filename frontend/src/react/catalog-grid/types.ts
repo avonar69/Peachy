@@ -94,6 +94,7 @@ export interface MediaCardActions {
   toggleTag(tag: string): void;
   /** 切换一张的选中；`range` 是按住 Shift 连选。 */
   toggleSelection(id: number, range: boolean): void;
+  selectMany?(ids: number[]): void;
   /** 切换稍后看。写 ledger；成功与撤销都把新值回给 `onChange`，失败由壳报。 */
   watchLater(item: MediaItem, onChange: (on: boolean) => void): Promise<void>;
   /** 回收站卡上那枚键：还原或移入回收站。写 ledger，做完重读目录并给撤销；失败由壳报，再抛出。 */

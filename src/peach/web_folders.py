@@ -36,6 +36,17 @@ def q_folders(contract, args):
     return result
 
 
+def q_folder_selection(contract, args):
+    node = _index(contract, args).get(args.get('folder'))
+    if node is None:
+        raise ValueError('目录不存在或已移出媒体库')
+    clause, params = media_folders.path_predicate(node['location'], node['path'], args.get('folder_recursive') != '0')
+    with contract.read_connection() as connection:
+        ids = [row[0] for row in connection.execute(
+            "SELECT a.id FROM asset a WHERE a.medium='video' AND a.disposal IS NULL AND " + clause + ' ORDER BY a.id', params)]
+    return {'ids': ids, 'total': len(ids)}
+
+
 def w_folder_preview(contract, body):
     node = _index(contract, {}).get(body.get('folder'))
     if node is None:

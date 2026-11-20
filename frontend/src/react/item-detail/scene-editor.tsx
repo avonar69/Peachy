@@ -4,13 +4,14 @@ import { UNSAFE_PortalProvider } from 'react-aria';
 import { RiEditLine } from '@remixicon/react';
 import { Button } from '@/components/base/buttons/button';
 import { Input } from '@/components/base/input/input';
-import { apiGet, apiSend } from '../../api';
+import { apiGet } from '../../api';
 import { translate } from '../../i18n';
 import { ModalFrame } from '../components/modal-frame';
 import { overlayHost } from '../components/overlay-host';
 import { Note } from '../components/note';
 import { useAction, busyProps } from '../settings/use-action';
 import type { DetailItem } from './item-detail';
+import { startMetadataEdit } from '../components/metadata-edit-progress';
 
 const FIELDS = [['catalog_title', '标题'], ['original_title', '原标题'], ['code', '番号'],
   ['release_date', '发行日期'], ['studio', '厂牌'], ['series', '系列']] as const;
@@ -44,15 +45,16 @@ export function SceneEditor({ id, onSaved, receipt }: { id: number; onSaved(item
   };
   const save = () => {
     if (!values || !original) return;
-    void action.run('save', async signal => {
+    setOpen(false);
+    void (async () => {
       const names = [...new Set(actors.split(/[\n,;]/).map(name => name.trim()).filter(Boolean))];
-      return apiSend<{ item: DetailItem }>('/api/scene-metadata', {
+      await startMetadataEdit('scene', {
         id, expected_revision: original.mutation_revision,
         values: Object.fromEntries(FIELDS.filter(([key]) => (values[key] || '') !== (original[key] || '')).map(([key]) => [key, values[key] || ''])),
         ...(JSON.stringify(names) !== JSON.stringify(original.performers) ? { performers: names } : {}),
         cover: await encoded(cover), thumbnail: await encoded(thumbnail),
-      }, 'POST', signal);
-    }, result => { onSaved(result.item); setOpen(false); receipt('Scene details saved.'); });
+      }, result => { onSaved(result.item as DetailItem); receipt('Scene details saved.'); });
+    })().catch(error => { action.setError(String(error)); setOpen(true); });
   };
   return <>
     <Button ref={anchor} type="button" size="small" variant="secondary" iconOnly leadingIcon={RiEditLine}

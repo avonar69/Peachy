@@ -34,6 +34,8 @@ StashDB 场景标签写入 `asset_tag` 并经 `upsert_asset_entity(kind='tag',ro
 
 `GET /api/scene-metadata?id=` 返回原始作品字段、完整演员名单与 `mutation_revision`。`POST /api/scene-metadata` 接受 `id`、`expected_revision`、`values` 和可选的 `performers` 数组；空数组表示手工清空演员。可选 `cover`、`thumbnail` 为最多 6 MB 的单张图片的 Base64 数据，解码后最多 2400 万像素，按作品保存独立封面键。写入经字段归属、乐观并发及标准鉴权／只读门槛。
 
+资料编辑窗口通过 `POST /api/metadata-job` 提交 `kind`（`scene`、`folder`、`batch`）及原写入契约的 `payload`。服务端保存固定选择集并返回 `job_id`，`GET /api/metadata-job` 返回状态、完成数、总数及终态结果；同一时刻只接收一项资料任务。批量厂牌和演员每批处理 200 项，失败保留已完成数，任务浮层提供重试。目录规则的 `assignments` 接受 `studio`、`series` 和 `performers`，与目录用途一起预览、撤回及继承。`GET /api/folders/selection?folder=` 返回目录内全部在库视频 ID，`folder_recursive=0` 限定当前层，不受作品分页限制。
+
 `POST /api/rematch-metadata` 接受 `kind=scene|performer|studio` 与 `id`。作品启动 `stage=rematch` 的定向资料任务，要求明确的 `asset_ids`，不发现新文件或生成视频预览；沿用任务状态、暂停、恢复、停止与复核入口，重查已配置来源且保留手工字段。演员与厂牌只请求当前 StashDB 身份，不查询作品。手工演员列表的归属保存在 `field_owners.performers`，自动资料、文件名及 StashDB 匹配均尊重该归属。
 
 `GET /api/stream-plan?probe_only=true` 只返回 `probe` 中的容器 MIME、完整编码组合、尺寸、帧率、码率及时间戳修复标记，不生成媒体。客户端随后通过 `native_play=true|false` 报告原片能力；不传该字段时保持已有判据。`/stream` 使用相同标记并返回原容器 MIME，HLS 的 `convert=true` 将已选择的转换决定传给播放列表与分片，避免浏览器拒绝原片后收到未经转换的分片。

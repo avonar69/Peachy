@@ -16,6 +16,7 @@ import { queryClient } from '../query';
 import { busyProps, useAction } from '../settings/use-action';
 import { ShellActionsContext } from '../router/router';
 import { PURPOSES, type FolderPurpose, type FolderRule, type MediaFolder } from './catalog-folders';
+import { startMetadataEdit } from '../components/metadata-edit-progress';
 
 interface Preview {
   plan_version: string; total: number; applicable: number; withdrawn: number;
@@ -32,9 +33,14 @@ export function FolderRuleDialog({ folder, rule, revision, close }: {
   const [name, setName] = useState(rule?.name || '');
   const [recursive, setRecursive] = useState(rule?.recursive ?? true);
   const [future, setFuture] = useState(rule?.future ?? false);
+  const [studio, setStudio] = useState(rule?.assignments?.find(item => item.purpose === 'studio')?.name || '');
+  const [series, setSeries] = useState(rule?.assignments?.find(item => item.purpose === 'series')?.name || '');
+  const [actors, setActors] = useState(rule?.assignments?.filter(item => item.purpose === 'performer').map(item => item.name).join('\n') || '');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const body = { folder: folder.id, purpose, name, recursive, future };
+  const body = { folder: folder.id, purpose, name, recursive, future,
+    assignments: { studio: purpose === 'studio' ? '' : studio, series: purpose === 'series' ? '' : series,
+      performers: actors.split(/[\n,;]/).map(value => value.trim()).filter(Boolean) } };
   const dirty = () => { setPreview(null); action.setError(''); };
   const finished = (message: string) => {
     void queryClient.invalidateQueries({ queryKey: ['catalog-folders'] });
@@ -45,9 +51,10 @@ export function FolderRuleDialog({ folder, rule, revision, close }: {
   const showPreview = () => action.run('preview', signal => apiSend<Preview>('/api/folders/preview', body, 'POST', signal), setPreview);
   const save = () => {
     if (!preview) return;
-    void action.run('save', signal => apiSend<{ applied: number; conflicts: number }>('/api/folders/rule', {
+    close();
+    void startMetadataEdit('folder', {
       ...body, action: 'save', plan_version: preview.plan_version, expected_revision: revision,
-    }, 'POST', signal), result => finished(`已保存目录用途${result.applied ? `，关联 ${result.applied} 项` : ''}`));
+    });
   };
   const remove = async () => {
     flushSync(() => setConfirming(true));
@@ -77,6 +84,13 @@ export function FolderRuleDialog({ folder, rule, revision, close }: {
         </div>
         {purpose !== 'category' ? <Input label="关联名称" value={name} onChange={value => { setName(value); dirty() }}
           placeholder="输入人物、账号或厂牌名称" maxLength={200} isDisabled={busy} isRequired /> : null}
+        {purpose !== 'studio' ? <Input label="厂牌" value={studio} maxLength={200} isDisabled={busy}
+          onChange={value => { setStudio(value); dirty() }} /> : null}
+        {purpose !== 'series' ? <Input label="系列" value={series} maxLength={200} isDisabled={busy}
+          onChange={value => { setSeries(value); dirty() }} /> : null}
+        <label className="flex min-w-0 flex-col gap-2"><span>Actors, one per line</span>
+          <textarea aria-label="Actors, one per line" rows={3} className="min-w-0 rounded-lg border border-separator-border p-3"
+            value={actors} disabled={busy} onChange={event => { setActors(event.target.value); dirty() }} /></label>
         <Checkbox isSelected={recursive} isDisabled={busy} onChange={value => { setRecursive(value); dirty() }}>应用到子文件夹</Checkbox>
         <Checkbox isSelected={future} isDisabled={busy} onChange={value => { setFuture(value); dirty() }}>新文件沿用此规则</Checkbox>
         {preview ? <section aria-label="目录用途影响范围" className="flex flex-col gap-3">
