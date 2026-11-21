@@ -98,7 +98,8 @@ from .web_resource_sync import w_purge_missing, w_resource_sync_apply, w_resourc
 from .web_review import q_review, w_review_decision, w_review_genre
 from .web_settings import q_settings, w_settings
 from .web_library_shortcuts import q_library_shortcuts, w_library_shortcuts
-from .web_folders import q_folders, w_folder_preview, w_folder_rule
+from .web_folders import q_folders, q_folder_selection, w_folder_preview, w_folder_rule
+from .web_metadata_jobs import q_metadata_job, w_metadata_job
 from .web_scraping import (
     q_scraping, q_scraping_amane_bridge, w_scraping_amane_check, w_scraping_amane_rebuild,
     w_scraping_check, w_scraping_cover, w_scraping_settings,
@@ -328,6 +329,8 @@ def _post_empty_trash(contract, _body):
 GET_HANDLERS = {
     "/api/media-processing": q_media_processing,
     "/api/folders": q_folders,
+    "/api/folders/selection": q_folder_selection,
+    "/api/metadata-job": q_metadata_job,
     "/api/tasks": q_tasks,
     "/api/downloads": q_downloads,
     "/api/resources/search": q_resource_search,
@@ -398,6 +401,7 @@ POST_HANDLERS = {
     "/api/media-processing": w_media_processing,
     "/api/folders/preview": w_folder_preview,
     "/api/folders/rule": w_folder_rule,
+    "/api/metadata-job": w_metadata_job,
     "/api/downloads": w_download_submit,
     "/api/downloads/cancel": w_download_cancel,
     "/api/downloads/postprocess": w_download_postprocess,

@@ -4,10 +4,12 @@ export interface MediaFolder {
   id: string; location: string; path: string; name: string; parent: string | null; root: string;
   videos: number; files: number; has_children: boolean;
 }
-export type FolderPurpose = 'category' | 'creator' | 'performer' | 'seller' | 'studio';
+export type FolderPurpose = 'category' | 'creator' | 'performer' | 'seller' | 'studio' | 'series';
 export interface FolderRule {
   id: string; location: string; path: string; purpose: FolderPurpose; name: string;
   entity_id: number | null; recursive: boolean; future: boolean;
+  actors_from_subfolders?: boolean;
+  assignments?: { purpose: FolderPurpose; name: string; entity_id: number | null }[];
 }
 export interface FolderPage {
   roots: MediaFolder[]; children: MediaFolder[]; ancestors: MediaFolder[];
@@ -17,7 +19,7 @@ export interface FolderPage {
 }
 export interface FolderScope { loc?: string; library?: string }
 export const PURPOSES: Record<FolderPurpose, string> = {
-  category: '个人分类', creator: '创作者／账号', performer: '人物', seller: '卖家', studio: '厂牌',
+  category: '个人分类', creator: '创作者／账号', performer: '演员', seller: '卖家', studio: '厂牌', series: '系列',
 };
 export function folderQuery(scope: FolderScope, folder = '', search = '') {
   const query = new URLSearchParams({ ...scope, folder, ...(search ? { q: search } : {}) });

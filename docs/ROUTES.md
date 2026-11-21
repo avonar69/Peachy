@@ -1,5 +1,7 @@
 # 页面路由
 
+目录规则的 `actors_from_subfolders` 为布尔值，默认 false，启用时须同时启用 `recursive`。保存和新文件继承均按视频直接所在的子目录名称建立演员关系；规则根目录直属视频和非视频不参与此项关联。关系使用目录规则来源，编辑或移除规则时可统一撤回，其他来源的出演关系保留。目录设置打开前重新读取已保存规则与修订号；新规则的页面默认 `future=true`，已保存值保持原值。
+
 `GET /api/entity` 与 `GET /api/index?kind=performers|studios` 的实体行包含 `scene_feedback`：`average_stars` 为有效已评分视频的平均星级（没有评分时为 null），`rated_count` 为评分视频数，`thumbs_up` 为本地喜欢数量，`thumbs_down` 为不喜欢数量。按视频 ID 去除重复关系，排除图片与非有效文件；厂牌范围包含子厂牌。详情评分、喜欢或不喜欢操作及其撤销会刷新资料页与名册查询。
 
 `POST /api/batch` 支持 `operation=studio|actor`，`name` 为非空且最多 200 字符的名称。厂牌更新与演员追加均使用手工归属；演员追加保留已有规范出演关系，事务失败整批回滚。`GET /api/items` 返回 `liked`，供卡片喜欢标记使用。
@@ -33,6 +35,8 @@ StashDB 场景标签写入 `asset_tag` 并经 `upsert_asset_entity(kind='tag',ro
 `GET /api/actor-merge?hide_conflicts=1` 在搜索与分页前排除仅含来源冲突候选的组。`mode=automatic` 返回整库高置信度计划的 `groups`、待并入 `actors` 数和 `token`；`mode=history` 返回可撤销批次的标识、时间与数量。`POST /api/actor-merge` 的 `action=automatic` 接受 `expected` 计划令牌及 `confirmed=true`，在单一事务中应用冻结的非冲突组。`action=undo` 接受 `batch_id` 及 `confirmed=true`，校验各改动终态、演员证据和头像后恢复行差异；遇到后续冲突修改拒绝并回滚。完整备份、头像和撤销差异存于数据库旁 `actor-merge-history/`，撤销前另备份当前库；不替换正在服务的数据库文件。
 
 `GET /api/scene-metadata?id=` 返回原始作品字段、完整演员名单与 `mutation_revision`。`POST /api/scene-metadata` 接受 `id`、`expected_revision`、`values` 和可选的 `performers` 数组；空数组表示手工清空演员。可选 `cover`、`thumbnail` 为最多 6 MB 的单张图片的 Base64 数据，解码后最多 2400 万像素，按作品保存独立封面键。写入经字段归属、乐观并发及标准鉴权／只读门槛。
+
+资料编辑窗口通过 `POST /api/metadata-job` 提交 `kind`（`scene`、`folder`、`batch`）及原写入契约的 `payload`。服务端为每次提交保存固定选择集并返回独立 `job_id`，按提交顺序串行应用资料，最多容纳 100 项等待任务。`GET /api/metadata-job?job_id=` 返回该项状态、完成数、总数、排队位置及终态结果；不带 `job_id` 返回 `jobs` 清单。等待状态为 `queued`，一项失败后继续后续编辑。浏览器按任务身份分别保存通知观察记录，刷新后逐项恢复查询。队列随服务进程运行，关停时取消等待项并等待当前项收工。批量厂牌和演员每批处理 200 项，失败保留已完成数，任务浮层提供重试。目录规则的 `assignments` 接受 `studio`、`series` 和 `performers`，与目录用途一起预览、撤回及继承。`GET /api/folders/selection?folder=` 返回目录内全部在库视频 ID，`folder_recursive=0` 限定当前层，不受作品分页限制。
 
 `POST /api/rematch-metadata` 接受 `kind=scene|performer|studio` 与 `id`。作品启动 `stage=rematch` 的定向资料任务，要求明确的 `asset_ids`，不发现新文件或生成视频预览；沿用任务状态、暂停、恢复、停止与复核入口，重查已配置来源且保留手工字段。演员与厂牌只请求当前 StashDB 身份，不查询作品。手工演员列表的归属保存在 `field_owners.performers`，自动资料、文件名及 StashDB 匹配均尊重该归属。
 

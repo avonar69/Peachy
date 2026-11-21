@@ -14,6 +14,14 @@ describe('Scene metadata controls', () => {
     const page = opened.page;
     const posts: Array<Record<string, unknown>> = [];
     const item = await page.evaluate(async id => (await fetch(`/api/item?id=${id}`)).json(), ITEM.plain);
+    let edit: Record<string, unknown> | undefined;
+    await page.route('**/api/metadata-job*', async route => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON(); edit = body.payload; posts.push(body);
+        await route.fulfill({ json: { job_id: 'scene-save', status: 'running', total: 1, checked: 0 } });
+      } else await route.fulfill({ json: { job_id: 'scene-save', status: 'complete', total: 1, checked: 1,
+        result: { ok: true, item: { ...item, title: 'Manually edited scene', catalog_title: 'Manually edited scene' } } } });
+    });
     await page.route('**/api/scene-metadata*', async route => {
       if (route.request().method() === 'GET') {
         await route.fulfill({ json: { catalog_title: 'Original title', original_title: '', code: '', studio: 'Original Studio',
@@ -39,7 +47,10 @@ describe('Scene metadata controls', () => {
       await dialog.screenshot({ path: `../build/agent-verification/scene-editor-${viewport.name}.png` });
       await dialog.getByRole('button', { name: 'Save scene', exact: true }).click();
       await dialog.waitFor({ state: 'detached' });
-      assert.deepEqual(posts[0], { id: ITEM.plain, expected_revision: 8, values: { catalog_title: 'Manually edited scene' }, performers: ['Clara Fargo', 'Jane Doe'] });
+      assert.deepEqual(posts[0], { kind: 'scene', payload: { id: ITEM.plain, expected_revision: 8, values: { catalog_title: 'Manually edited scene' }, performers: ['Clara Fargo', 'Jane Doe'] } });
+      assert.ok(edit);
+      await page.locator('[data-processing-dock]').getByText('Metadata saved', { exact: true }).waitFor();
+      await page.locator('[data-processing-dock]').getByRole('button', { name: 'Close', exact: true }).click();
       await tools.getByRole('button', { name: 'Rematch metadata', exact: true }).click();
       await page.waitForFunction(() => !document.querySelector('[data-title-tools] [aria-busy="true"]'));
       assert.deepEqual(posts[1], { kind: 'scene', id: ITEM.plain });

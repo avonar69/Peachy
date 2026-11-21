@@ -1,4 +1,4 @@
-import { useContext, useDeferredValue, useEffect, useLayoutEffect, useState } from 'react';
+import { useContext, useDeferredValue, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useInRouterContext, useLocation } from 'react-router';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -48,7 +48,18 @@ export function CatalogFolders() {
   const key = params.get('folder') || '';
   const query = useQuery({ ...folderQuery(scope, key), enabled: active });
   const [drawer, setDrawer] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<FolderPage | null>(null);
+  const [opening, setOpening] = useState(false);
+  const dialogScope = `${active}:${scope.loc}:${scope.library}:${key}`;
+  const currentScope = useRef(dialogScope);
+  currentScope.current = dialogScope;
+  const openSettings = async () => {
+    setOpening(true);
+    try {
+      const latest = await query.refetch();
+      if (currentScope.current === dialogScope && latest.data && !latest.error) setEditing(latest.data);
+    } finally { setOpening(false) }
+  };
   const treeHost = document.getElementById('catalogFoldersTree');
   const headerHost = document.getElementById('catalogFolderHeader');
   useLayoutEffect(() => {
@@ -61,7 +72,7 @@ export function CatalogFolders() {
       document.body.removeAttribute('data-folder-browse');
     };
   }, [active, treeHost, headerHost]);
-  useEffect(() => { setDrawer(false); setEditing(false) }, [key, active]);
+  useEffect(() => { setDrawer(false); setEditing(null) }, [dialogScope]);
   if (!active || !treeHost || !headerHost || !actions) return null;
   const go = (id: string) => {
     setDrawer(false);
@@ -81,10 +92,10 @@ export function CatalogFolders() {
             onClick={() => go(node.id)}><span className="folder-crumb-name" data-middle-truncate="">{node.name}</span></BreadcrumbItem>)}
         </Breadcrumb>
         {data?.selected ? <IconButton aria-label="设置目录用途" icon={RiFolderSettingsLine} size="small"
-          onClick={() => setEditing(true)} /> : null}
+          disabled={opening} onClick={() => { void openSettings() }} /> : null}
       </div>
       {query.error ? <Note tone="error" action={<Button variant="secondary" size="small" onClick={() => { void query.refetch() }}>重试</Button>}>{errorMessage(query.error)}</Note> : null}
-      {data?.conflicts?.length ? <Note tone="warning" action={<Button variant="secondary" size="small" onClick={() => setEditing(true)}>查看归属冲突</Button>}>{data.conflicts.length} 项保留现有归属</Note> : null}
+      {data?.conflicts?.length ? <Note tone="warning" action={<Button variant="secondary" size="small" disabled={opening} onClick={() => { void openSettings() }}>查看归属冲突</Button>}>{data.conflicts.length} 项保留现有归属</Note> : null}
       {data?.selected ? <div className="folder-scope-row">
         <Checkbox size="sm" isSelected={params.get('folder_recursive') !== '0'}
           onChange={on => actions.navigate(folderHref(address, { folder_recursive: on ? null : '0' }))}>包含子文件夹</Checkbox>
@@ -101,8 +112,8 @@ export function CatalogFolders() {
       </div>
       <div className="peach-react relative p-4">{drawer ? navigation : null}</div>
     </ModalFrame>
-    {editing && data?.selected ? <FolderRuleDialog key={data.selected.id} folder={data.selected} rule={data.rule}
-      revision={data.rules_revision} close={() => setEditing(false)} /> : null}
+    {editing?.selected ? <FolderRuleDialog key={editing.selected.id} folder={editing.selected} rule={editing.rule}
+      revision={editing.rules_revision} close={() => setEditing(null)} /> : null}
   </>;
 }
 

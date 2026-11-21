@@ -12,6 +12,10 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 ## Peachy features
 
+Directory rules can assign each video's containing subfolder name as its actor, excluding videos directly in the selected parent. Reopening settings loads the saved rule. New rules enable inheritance for new files by default; saved choices are retained.
+
+Folder lists support selecting every video across pages. Directory rules can combine a studio, series and multiple actors, apply to subfolders, and carry those assignments to new files. Scene and folder saves close the editor immediately and show progress or errors in the background-task popup. Additional edits wait in submission order and start automatically; each edit has its own status and completion receipt.
+
 - **Languages and LAN access:** English by default, with Simplified/Traditional Chinese, Vietnamese, Japanese, Korean, German, Spanish, French and Portuguese. Settings, tasks, diagnostics and review screens are localized; LAN connections and ordinary HTTP origins are supported.
 - **StashDB matching and review:** Combines filename, actor folder, studio, release date, duration and optional OSHASH evidence. Includes ignored text, adjustable confidence, quick application of saved scores, recent-media retries, a shared review queue and separate actor/studio/scene resync with manual edits protected.
 - **Actor and studio information:** Actor photos, aliases, biographical details and scene tags; actor merging with backup and undo. Profiles and browsing cards show your average scene rating and thumbs-up/down totals, excluding unrated videos from the average.
@@ -22,7 +26,7 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](#简体中文).
 
-Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
+Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Post titles open the original article. Clear finished hides completed, failed or cancelled tasks, including failed link preparation; Close dismisses the popup when no transfer or import is active. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
 
 Following → All includes RSS updates. Each RSS feed has its own automatic-update switch and interval, defaulting to 6 hours; turning it off keeps saved posts and allows manual refresh.
 
@@ -185,6 +189,7 @@ Peachy 是基于 [Peach](https://github.com/peach-mitao/peach) 的独立分支�
 ## Peachy 功能
 
 - **多语言与局域网访问**：默认英文，提供简繁中文、越南语、日语、韩语、德语、西班牙语、法语及葡萄牙语；覆盖设置、任务、诊断与复核界面。支持显式开放局域网连接及普通 HTTP 环境。
+- **目录资料与批量编辑**：列表可跨页选择整个目录；目录规则组合厂牌、系列与多个演员，支持子目录及新文件继承。可按视频所在子目录名称关联演员，父目录直属视频不参与此项关联。打开设置读取已保存规则；新规则默认启用新文件继承，已保存选择保持原值。保存资料后关闭编辑窗口，任务浮层显示进度或错误。连续提交按顺序排队，逐项显示状态并自动开始下一项。
 - **StashDB 匹配与复核**：综合文件名、演员目录、厂牌、日期、时长及可选 OSHASH；支持忽略文本、可调门槛、已有分数快速匹配、近期视频重试及统一人工复核。演员、厂牌和作品可分别同步，手工修订受到保护。
 - **演员与厂牌资料**：同步演员照片、别名、生日、身高等资料及作品标签；提供演员合并、备份与撤销。资料页和名册显示个人平均星级与喜欢／不喜欢数量，未评分影片不计入均值。
 - **增量扫描与时间轴**：默认只处理新增视频；媒体目录支持独立扫描开关与周期，零小时关闭自动扫描。新增视频定向生成时间轴，提供间隔、速度、硬件解码及停止控制。
@@ -202,7 +207,7 @@ Peachy 是基于 [Peach](https://github.com/peach-mitao/peach) 的独立分支�
 
 时间轴缩略图任务显示独立进度与停止按钮，FFmpeg 按所选速度分配线程，任务取消后回收自身子进程。自动扫描只为本次新增且具备时长的视频生成时间轴，不检查已有影片；活动定向任务可追加下一次扫描的新作品，同一轮不重复尝试失败项。已保存的采样间隔和关闭开关继续生效。设置中的显式生成操作用于全库补缺或重新生成。播放器拖动预览按单格裁切图集，支持恢复播放和末张不足十行的预览图。详情见[性能选项与验证范围](docs/PERFORMANCE.md)。
 
-定制版本在关注管理提供 RSS 图文列表，展示主缩略图、全部预览图及带 AllDebrid／Real-Debrid 图标的下载链接。每个订阅可隐藏不支持的链接。在下载渠道保存密钥及可选目录；容器目录用于服务端下载，留空交给浏览器。设计边界见 [RSS 下载决策](docs/adr/0116-rss-debrid-downloads.md)。
+定制版本在关注管理提供 RSS 图文列表，展示主缩略图、全部预览图及带 AllDebrid／Real-Debrid 图标的下载链接，标题可打开原文章。「清除已结束」隐藏已完成、失败或取消的任务，包括链接准备失败；没有传输或导入在运行时可关闭浮层。每个订阅可隐藏不支持的链接。在下载渠道保存密钥及可选目录；容器目录用于服务端下载，留空交给浏览器。设计边界见 [RSS 下载决策](docs/adr/0116-rss-debrid-downloads.md)。
 
 关注页的「全部」包含 RSS 更新。每条 RSS 订阅可独立开启自动更新并设置间隔，默认 6 小时；关闭自动更新仍保留已取得条目，并可手工检查更新。
 

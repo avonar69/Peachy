@@ -26,6 +26,24 @@ async function open(job: DebridJob, readOnly = false, related: DebridJob[] = [])
 const job: DebridJob = { id: 'file-one', entry_id: 1, provider: 'alldebrid', kind: 'download', status: 'downloading',
   filename: 'Example video.mp4', bytes: 500, total: 1000, bytes_per_second: 2097152 };
 
+it('链接准备失败可清除并关闭浮层', async () => {
+  await open({ ...job, kind: 'resolve', status: 'failed', error: 'Provider request failed.' });
+  const [render] = sonner.custom.mock.calls.at(-1)!;
+  const host = await mount(<QueryClientProvider client={queryClient}>{render()}</QueryClientProvider>);
+  expect(buttonNamed('Clear finished', host)?.disabled).toBe(false);
+  await click(buttonNamed('Close', host));
+  expect(JSON.parse(localStorage.getItem('peach.debrid-progress')!)).toEqual([]);
+  expect(sonner.dismiss).toHaveBeenCalledWith('peach-debrid-downloads');
+});
+
+it('只读页面允许本机关闭失败任务，但保留活动任务', async () => {
+  await open({ ...job, kind: 'resolve', status: 'failed' }, true);
+  const [render] = sonner.custom.mock.calls.at(-1)!;
+  const host = await mount(<QueryClientProvider client={queryClient}>{render()}</QueryClientProvider>);
+  expect(buttonNamed('Clear finished', host)?.disabled).toBe(true);
+  expect(buttonNamed('Close', host)?.disabled).toBe(false);
+});
+
 it('跟踪准备链接时保留已完成传输并提供清除入口', async () => {
   const parent: DebridJob = { id: 'parent', entry_id: 1, provider: 'alldebrid', kind: 'resolve', status: 'ready',
     files: [{ filename: 'Example video.mp4', url: 'https://example.org/video', download_id: job.id }] };
@@ -49,6 +67,7 @@ it('下载浮层复用后台任务通知栈并显示真实字节进度和取消�
   expect(bar.max).toBe(1000);
   expect(host.textContent).toContain('2.0 MB/s');
   expect(host.textContent).toContain('Σ 2.0 MB/s');
+  expect(buttonNamed('Close', host)).toBeNull();
   await click(buttonNamed('Cancel download', host));
   expect(posts).toContainEqual({ id: 'file-one' });
 });

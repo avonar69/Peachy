@@ -58,6 +58,16 @@ function PostPicture({ picture, title, preview = false }: { picture?: Picture; t
   </a>;
 }
 
+function PostTitle({ entry }: { entry: Entry }) {
+  let href: string | undefined;
+  try {
+    const page = new URL(entry.link || '');
+    if (page.protocol === 'https:' || page.protocol === 'http:') href = page.href;
+  } catch { /* 没有文章地址的条目使用普通标题。 */ }
+  return <h4 className="break-words text-body-medium" data-i18n-ignore="">{href
+    ? <a href={href} target="_blank" rel="noopener noreferrer" className="underline">{entry.title}</a> : entry.title}</h4>;
+}
+
 export function RSSDownloads({ readOnly, toast, feedOnly = false, onVisibleCount, onUpdatedAt, download = (url: string) => window.location.assign(url) }: {
   readOnly: boolean; toast(message: string): void; feedOnly?: boolean; onVisibleCount?(count: number): void; onUpdatedAt?(stamp: string): void; download?(url: string): void;
 }) {
@@ -189,7 +199,7 @@ export function RSSDownloads({ readOnly, toast, feedOnly = false, onVisibleCount
     </>}
     {!data.items.length ? <Help>{selected === null ? 'No RSS items yet. Add a feed and check for updates.' : 'No posts from the selected RSS feeds.'}</Help> : null}
     {data.items.map(entry => <article key={entry.id} className="flex min-w-0 flex-col gap-3 border-b border-border-button-default py-4">
-      <h4 className="break-words text-body-medium" data-i18n-ignore="">{entry.title}</h4>
+      <PostTitle entry={entry} />
       <p className="text-caption-1-regular" data-i18n-ignore="">{entry.feed_name} {entry.published_at ? new Date(entry.published_at).toLocaleString() : ''}</p>
       {entry.images?.main || entry.images?.previews?.length ? <div className="flex min-w-0 flex-col items-start gap-4">
         <PostPicture picture={entry.images.main} title={entry.title} />

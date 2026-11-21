@@ -1,4 +1,5 @@
 import { selectionSurface, selectionDock, setSelectionMode, toggleSelection as toggleSelected } from '../react/catalog-grid/selection-controller';
+import { startMetadataEdit } from '../react/components/metadata-edit-progress';
 import { selectSurface } from '../shell';
 /* selection 域控制器：本域状态与动作，启动由 Application 的生命周期统一安装。 */
 import { loadCatalog, pushGridPage } from './catalog.js';
@@ -44,6 +45,11 @@ export function toggleSelection(id,range=false) {
     setSelectMode(true);
   }
 
+export function selectMany(ids) {
+  ids.forEach(id=>selected.add(id));
+  setSelectMode(true);
+}
+
 export function visibleFollowIds(){return [...document.querySelectorAll('[data-follow-list] > [data-follow-item]')]
   .map(card=>+card.dataset.followItem)}
 
@@ -87,10 +93,11 @@ async function editBatchMetadata(operation){
     onConfirm:async()=>{
       const name=modal.dialog.querySelector('[name="metadata-name"]').value.trim();
       if(!name)throw new Error('Enter a valid name.');
-      return api('/api/batch',{method:'POST',body:JSON.stringify({ids,operation,name})});
+      void startMetadataEdit('batch',{ids,operation,name},()=>{void reloadAfterWrite()});
+      return {queued:true};
     }});
   const result=await modal.done;
-  if(result.confirmed){setSelectMode(false,true);await reloadAfterWrite()}
+  if(result.confirmed)setSelectMode(false,true);
 }
 
 export async function pickBatchRegion(){

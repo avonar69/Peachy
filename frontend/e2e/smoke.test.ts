@@ -129,7 +129,7 @@ const ROUTES: readonly Route[] = [
   { path: '/settings/library', body: configurationBody },
   { path: '/diagnostics', body: page => [page.getByRole('tab', { name: '系统诊断', selected: true }), page.locator('#stats section[aria-label="库健康"]')] },
   { path: '/settings/diagnostics', body: page => [page.getByRole('tab', { name: '系统诊断', selected: true }), page.locator('#stats section[aria-label="库健康"]')] },
-  { path: '/tasks', body: (page) => [heading(page, '#main', '任务中心'), heading(page, '#stats', '还没有任务记录')] },
+  { path: '/tasks', body: (page) => [heading(page, '#main', '任务中心'), page.locator('#stats').getByRole('heading', { name: /^(还没有任务记录|正在进行)$/ }).first()] },
   ...['', '/appearance', '/playback', '/jav', '/search', '/content'].map(section => ({ path: '/settings' + section,
     body: (page: Page) => [page.getByRole('dialog', { name: /外观与导航|浏览与播放|JAV 与新作|搜索与推荐|内容显示/ })] })),
   ...['subscriptions', 'downloads', 'network', 'maintenance'].map(section => ({ path: `/settings/${section}`, body: configurationBody })),
@@ -221,7 +221,7 @@ describe('路由冒烟', () => {
         assert.ok(polls.length >= least, `${what}：只看到 ${polls.length} 次 /api/tasks，要 ${least} 次`);
       };
       await expectBody(opened.page, '/tasks',
-        [heading(opened.page, '#stats', '还没有任务记录')]);
+        [opened.page.locator('#stats').getByRole('heading', { name: /^(还没有任务记录|正在进行)$/ }).first()]);
       // 先确认轮询真的在跑，否则下面「停下来了」在它从没开始时也成立。
       await waitForPolls(2, '活动页的轮询没有跑起来');
 
@@ -236,14 +236,14 @@ describe('路由冒烟', () => {
       assert.equal(await opened.page.locator('#stats .peach-react').count(), 1,
         '管理区正文里不是只剩统计页那一棵 React 根');
       assert.equal(
-        await opened.page.locator('#stats').getByRole('heading', { name: '还没有任务记录' }).count(), 0,
+        await opened.page.locator('#stats').getByRole('heading', { name: /^(还没有任务记录|正在进行)$/ }).count(), 0,
         '换页之后活动页的 React 根还留在管理区正文里');
       await opened.page.waitForTimeout(3_000);
       assert.equal(polls.length, stopped, '离开活动页之后 /api/tasks 还在轮询');
 
       await opened.page.goBack();
       await expectBody(opened.page, '/tasks',
-        [heading(opened.page, '#stats', '还没有任务记录')]);
+        [opened.page.locator('#stats').getByRole('heading', { name: /^(还没有任务记录|正在进行)$/ }).first()]);
       await waitForPolls(stopped + 2, '回到活动页之后轮询没有接上');
       await assertHolds(opened.page, opened.problems, '/activity 换页往返');
     } finally {
