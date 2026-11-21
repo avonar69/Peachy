@@ -247,6 +247,34 @@ class MediaFolderTests(unittest.TestCase):
             self.assertEqual(folder_rules.apply_new(connection, [5, 6]), 1)
             self.assertEqual([row[0] for row in connection.execute('SELECT creator FROM asset WHERE id IN (5,6) ORDER BY id')], ['作者甲', None])
 
+    def test_subfolder_actor_rule_persists_inherits_and_withdraws_its_cast(self):
+        with self.contract.write_transaction() as connection:
+            upsert_asset_entity(connection, kind='performer', name='手动演员', asset_id=2,
+                                role='performer', source='user:manual')
+        self.save(purpose='category', name='', actors_from_subfolders=True, future=True)
+        saved = self.read(folder=self.key())['rule']
+        self.assertTrue(saved['actors_from_subfolders'])
+        self.assertTrue(saved['future'])
+        with self.contract.write_transaction() as connection:
+            def cast(asset_id):
+                return [row[0] for row in connection.execute(
+                    "SELECT e.canonical_name FROM asset_entity ae JOIN entity e ON e.id=ae.entity_id "
+                    "WHERE ae.asset_id=? AND e.kind='performer' ORDER BY e.canonical_name", (asset_id,))]
+            self.assertEqual(cast(1), [])
+            self.assertEqual(set(cast(2)), {'手动演员', '视频'})
+            new_id = connection.execute(
+                "INSERT INTO asset(location,path,name,medium) VALUES('local',?,'new.mp4','video')",
+                ('R:\\Media\\精选\\作者甲\\Alex\\new.mp4',)).lastrowid
+            self.assertEqual(folder_rules.apply_new(connection, [new_id]), 1)
+            self.assertEqual(cast(new_id), ['Alex'])
+            self.assertEqual(folder_rules.apply_new(connection, [new_id]), 0)
+        web_folders.w_folder_rule(self.contract, {
+            'folder': self.key(), 'action': 'remove', 'expected_revision': self.read()['rules_revision']})
+        with self.contract.read_connection() as connection:
+            self.assertEqual([tuple(row) for row in connection.execute(
+                "SELECT ae.asset_id,e.canonical_name FROM asset_entity ae JOIN entity e ON e.id=ae.entity_id "
+                "WHERE e.kind='performer' ORDER BY ae.asset_id")], [(2, '手动演员')])
+
     def test_withdrawal_restores_an_empty_automatic_field_owner(self):
         with self.contract.write_transaction() as connection:
             write_owned_fields(connection, [1], {'creator': ''}, 'auto:seed')
