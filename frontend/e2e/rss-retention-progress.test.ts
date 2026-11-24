@@ -79,4 +79,49 @@ describe('RSS archive and debrid progress', () => {
       assert.deepEqual(opened.problems, []);
     } finally { await opened.close() }
   });
+  for (const viewport of VIEWPORTS) it(`${viewport.name}: failed link preparation can be cleared or closed`, async () => {
+    const state = { providers: [{ id: 'alldebrid', label: 'AllDebrid', configured: true }],
+      sources: [], items: [], total: 0, offset: 0,
+      jobs: [{ id: 'failed-link', entry_id: 1, provider: 'alldebrid', kind: 'resolve', status: 'failed',
+        error: 'Provider request failed.', dismissed: false }] };
+    let cleared = false;
+    const opened = await visit(browser, '/subscriptions?tab=rss', viewport, async page => {
+      await stubServer(page);
+      await page.addInitScript(() => {
+        if (localStorage.getItem('peach.debrid-progress') === null)
+          localStorage.setItem('peach.debrid-progress', JSON.stringify(['failed-link']));
+      });
+      await page.route('**/api/library-processing', route => route.fulfill({ json: { status: 'idle' } }));
+      await page.route('**/api/rss**', async route => {
+        if (route.request().method() === 'POST') {
+          assert.equal(new URL(route.request().url()).pathname, '/api/rss/clear-finished');
+          state.jobs[0].dismissed = true; cleared = true;
+          await route.fulfill({ json: { ok: true, cleared: 1 } });
+        } else await route.fulfill({ json: state });
+      });
+    });
+    try {
+      const { page } = opened;
+      const popup = page.locator('[data-processing-dock][aria-label="Debrid downloads"]');
+      await popup.waitFor();
+      assert.equal(await popup.getByRole('button', { name: 'Clear finished', exact: true }).isEnabled(), true);
+      const measured = await layout(page);
+      assert.ok(measured.scrollWidth <= measured.viewportWidth, JSON.stringify(measured));
+      await popup.getByRole('button', { name: 'Clear finished', exact: true }).click();
+      await popup.waitFor({ state: 'hidden' });
+      assert.ok(cleared);
+      await page.reload();
+      assert.equal(await popup.count(), 0);
+      state.jobs[0].dismissed = false;
+      await page.evaluate(() => localStorage.setItem('peach.debrid-progress', JSON.stringify(['failed-link'])));
+      await page.reload();
+      await popup.waitFor();
+      await popup.getByRole('button', { name: 'Close', exact: true }).click();
+      await popup.waitFor({ state: 'hidden' });
+      assert.equal(await page.evaluate(() => localStorage.getItem('peach.debrid-progress')), '[]');
+      await page.reload();
+      assert.equal(await popup.count(), 0);
+      assert.deepEqual(opened.problems, []);
+    } finally { await opened.close() }
+  });
 });

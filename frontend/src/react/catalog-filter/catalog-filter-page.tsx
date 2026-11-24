@@ -17,7 +17,7 @@ import { LibraryShortcuts } from '../library-shortcuts/shortcut-controls';
 import { FolderBrowseToggle } from '../catalog-folders/catalog-folders-page';
 import { useCatalogView } from '../catalog-grid/catalog-view';
 import { CatalogViewToggle } from '../catalog-grid/catalog-view-toggle';
-import { Combo, Segments, Shuffle, SortKeys } from '../entity-filter/entity-filter-page';
+import { Combo, Segments, Shuffle, VideoSort } from '../entity-filter/entity-filter-page';
 import {
   EMPTY_SLOTS, ROW_AHEAD, ROW_BATCH, ROW_FIRST, type CatalogFilterProps, type CatalogTag, type TierKind,
   type TierPerformer, type TierStudio,
@@ -213,7 +213,7 @@ function Head({ count, refreshing, layout, sorts, actions }: CatalogFilterProps)
           onChange={actions.setLayout} /> : null}
         <CatalogViewToggle />
         <FolderBrowseToggle />
-        {view === 'cards' ? <SortKeys sorts={sorts} onSort={actions.setSort} /> : null}
+        {view === 'cards' ? <VideoSort sorts={sorts} onSort={actions.setSort} /> : null}
       </span>
     </>
   );

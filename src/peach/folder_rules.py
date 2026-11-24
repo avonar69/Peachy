@@ -14,7 +14,7 @@ from .media_folders import path_predicate, within
 from .profiles import DEFAULT_PROFILE_ID
 
 KEY = 'folderRules'
-KINDS = {'category': '', 'creator': 'creator', 'performer': 'performer', 'seller': 'creator', 'studio': 'studio'}
+KINDS = {'category': '', 'creator': 'creator', 'performer': 'performer', 'seller': 'creator', 'studio': 'studio', 'series': 'series'}
 
 
 class FolderRuleConflict(ValueError):
@@ -29,7 +29,7 @@ def load(connection) -> tuple[dict, dict]:
     data = settings.get(KEY, {'revision': 0, 'rules': []})
     if not isinstance(data, dict) or not isinstance(data.get('rules'), list) or type(data.get('revision')) is not int:
         raise ValueError('目录规则格式不正确')
-    for rule in data['rules']:
+    for rule in [item for rule in data['rules'] for item in [rule, *rule.get('assignments', [])]]:
         if rule.get('entity_id'):
             target = resolve_entity_id(connection, rule['entity_id'])
             row = connection.execute('SELECT id,kind,canonical_name FROM entity WHERE id=?', (target,)).fetchone() if target else None
@@ -54,6 +54,10 @@ def validate(connection, node, body):
         raise ValueError('请选择目录用途')
     if not isinstance(body.get('recursive'), bool) or not isinstance(body.get('future'), bool):
         raise ValueError('目录范围与新文件设置须明确选择')
+    if not isinstance(body.get('actors_from_subfolders', False), bool):
+        raise ValueError('子目录演员设置须明确选择')
+    if body.get('actors_from_subfolders') and not body['recursive']:
+        raise ValueError('按子目录名称关联演员须启用应用到子文件夹')
     name = body.get('name', '')
     if not isinstance(name, str) or len(name) > 200:
         raise ValueError('关联名称最多 200 个字符')
@@ -73,14 +77,41 @@ def validate(connection, node, body):
                 raise ValueError('名称存在多个身份或不同写法，请使用资料页的规范名称')
         else:
             entity_id, canonical = entity['id'], entity['canonical_name']
-    return {'id': node['id'], 'location': node['location'], 'path': node['path'], 'purpose': purpose,
-            'name': canonical, 'entity_id': entity_id, 'recursive': body['recursive'], 'future': body['future']}
+    rule = {'id': node['id'], 'location': node['location'], 'path': node['path'], 'purpose': purpose,
+            'name': canonical, 'entity_id': entity_id, 'recursive': body['recursive'], 'future': body['future'],
+            'actors_from_subfolders': body.get('actors_from_subfolders', False)}
+    assignments = body.get('assignments', {})
+    if not isinstance(assignments, dict) or set(assignments) - {'studio', 'performers', 'series'}:
+        raise ValueError('目录关联资料无效')
+    actors = assignments.get('performers', [])
+    if not isinstance(actors, list) or len(actors) > 100:
+        raise ValueError('演员列表无效')
+    extra = []
+    for key, names in (('studio', [assignments.get('studio', '')]), ('series', [assignments.get('series', '')]), ('performer', actors)):
+        for value in names:
+            if not isinstance(value, str):
+                raise ValueError('关联名称无效')
+            if not value.strip():
+                continue
+            item = validate(connection, node, {**body, 'purpose': key, 'name': value, 'assignments': {}})
+            association = {key: item[key] for key in ('purpose', 'name', 'entity_id')}
+            if association not in extra:
+                extra.append(association)
+    rule['assignments'] = extra
+    for kind in ('studio', 'series', 'creator'):
+        if len({item['name'] for item in associations(rule) if KINDS[item['purpose']] == kind}) > 1:
+            raise ValueError('同一目录只能关联一个厂牌、系列或创作者')
+    return rule
+
+
+def associations(rule):
+    return [rule] + [{**rule, **item} for item in rule.get('assignments', [])]
 
 
 def _asset_rows(connection, rule):
     clause, params = path_predicate(rule['location'], rule['path'], rule['recursive'])
     return [dict(row) for row in connection.execute(
-        "SELECT a.id,a.location,a.path,a.name,a.creator,a.studio,a.field_owners,a.mutation_revision "
+        "SELECT a.id,a.location,a.path,a.name,a.medium,a.creator,a.studio,a.series,a.field_owners,a.mutation_revision "
         "FROM asset a WHERE COALESCE(a.disposal,'') NOT IN ('trash','vanished') AND " + clause + ' ORDER BY a.id', params)]
 
 
@@ -91,16 +122,21 @@ def _relations(connection, asset_id):
 
 
 def _conflict(connection, asset, rule, relations):
+    return next((reason for item in associations(rule)
+                 if (reason := _single_conflict(connection, asset, item, relations))), '')
+
+
+def _single_conflict(connection, asset, rule, relations):
     kind = KINDS[rule['purpose']]
     if not kind:
         return ''
-    field = kind if kind in {'creator', 'studio'} else ''
+    field = kind if kind in {'creator', 'studio', 'series'} else ''
     own = source(rule)
     if field and asset[field] and asset[field] != rule['name'] and owner_of(asset['field_owners'], field) != own:
         return '已有不同的归属'
     if field and owner_of(asset['field_owners'], field).startswith(('user:', 'review:')) and owner_of(asset['field_owners'], field) != source(rule):
         return '已有逐件确认'
-    if any(row['kind'] == kind and row['canonical_name'] != rule['name'] and row['source'] != own for row in relations):
+    if kind != 'performer' and any(row['kind'] == kind and row['canonical_name'] != rule['name'] and row['source'] != own for row in relations):
         return '已有不同的身份关系'
     if kind == 'creator' and _creator_attribution_rejected(connection, [rule['name']], asset['id'], asset['path']):
         return '已有归属否定'
@@ -117,7 +153,7 @@ def plan(connection, rule, data):
         reason = '由子目录规则管理' if chosen and chosen['id'] != rule['id'] else _conflict(connection, asset, rule, relations)
         rows.append({**asset, 'reason': reason, 'relations': relations})
     old = next((item for item in data['rules'] if item['id'] == rule['id']), None)
-    changing = old and any(old.get(key) != rule[key] for key in ('purpose', 'name', 'entity_id', 'recursive'))
+    changing = old and any(old.get(key) != rule.get(key) for key in ('purpose', 'name', 'entity_id', 'recursive', 'assignments', 'actors_from_subfolders'))
     previous = [dict(row) for row in connection.execute(
         'SELECT a.id,a.path,a.creator,a.studio,a.field_owners,a.mutation_revision,ae.entity_id,ae.role,ae.metadata_json '
         'FROM asset_entity ae JOIN asset a ON a.id=ae.asset_id WHERE ae.source=? ORDER BY a.id,ae.entity_id,ae.role',
@@ -130,14 +166,33 @@ def plan(connection, rule, data):
 
 
 def _link(connection, asset, rule):
+    changed = _single_link(connection, asset, rule)
+    for item in rule.get('assignments', []):
+        association = {**rule, **item}
+        changed = _single_link(connection, asset, association) or changed
+        item['entity_id'] = association['entity_id']
+    if rule.get('actors_from_subfolders') and asset.get('medium') == 'video':
+        parent = PureWindowsPath(asset['path']).parent
+        root = PureWindowsPath(rule['path'])
+        if parent != root and root in parent.parents:
+            name = canonicalize_entity_name('performer', parent.name)
+            if name and len(name) <= 200:
+                association = {**rule, 'purpose': 'performer', 'name': name, 'entity_id': None}
+                changed = _single_link(connection, asset, association) or changed
+    return changed
+
+
+def _single_link(connection, asset, rule):
     kind = KINDS[rule['purpose']]
     if not kind:
         return False
     own = source(rule)
-    if connection.execute('SELECT 1 FROM asset_entity WHERE asset_id=? AND source=?', (asset['id'], own)).fetchone():
+    if connection.execute('SELECT 1 FROM asset_entity ae JOIN entity e ON e.id=ae.entity_id '
+                          'WHERE ae.asset_id=? AND ae.source=? AND e.kind=? AND e.canonical_name=?',
+                          (asset['id'], own, kind, rule['name'])).fetchone():
         return False
     metadata = {'directory': rule['path'], 'rule_id': rule['id'], 'purpose': rule['purpose']}
-    field = kind if kind in {'creator', 'studio'} else ''
+    field = kind if kind in {'creator', 'studio', 'series'} else ''
     if field:
         metadata['projection'] = {'field': field, 'value': asset[field], 'owner': owner_of(asset['field_owners'], field)}
     entity_id = upsert_asset_entity(connection, kind=kind, name=rule['name'], asset_id=asset['id'], role=kind,
@@ -190,7 +245,7 @@ def save(connection, settings, data, rule, preview, expected):
     if preview['plan_version'] != expected:
         raise FolderRuleConflict('目录内容或归属已变化，请重新预览')
     old = next((row for row in data['rules'] if row['id'] == rule['id']), None)
-    if old and any(old.get(key) != rule[key] for key in ('purpose', 'name', 'entity_id', 'recursive')):
+    if old and any(old.get(key) != rule.get(key) for key in ('purpose', 'name', 'entity_id', 'recursive', 'assignments', 'actors_from_subfolders')):
         withdraw(connection, old)
         preview = plan(connection, rule, data)
     applied = sum(_link(connection, row, rule) for row in preview['rows'] if not row['reason'])
@@ -227,13 +282,13 @@ def apply_new(connection, asset_ids):
             return 0
         count = 0
         for asset_id in asset_ids:
-            row = connection.execute('SELECT id,location,path,name,creator,studio,field_owners,mutation_revision '
+            row = connection.execute('SELECT id,location,path,name,medium,creator,studio,series,field_owners,mutation_revision '
                                      'FROM asset WHERE id=?', (asset_id,)).fetchone()
             if row is None:
                 continue
             asset = dict(row)
             rule = effective(data['rules'], asset['location'], asset['path'])
-            if not rule or not rule['future'] or not KINDS[rule['purpose']]:
+            if not rule or not rule['future']:
                 continue
             if not _conflict(connection, asset, rule, _relations(connection, asset_id)):
                 count += _link(connection, asset, rule)

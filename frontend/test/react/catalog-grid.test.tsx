@@ -184,6 +184,15 @@ describe('作品卡', () => {
     expect(unowned.onOpen).not.toHaveBeenCalled();
   });
 
+  it('演员署名提供资料链接，点击打开演员而不打开作品', async () => {
+    const credited = await render(item(7, { performers: ['Alex', 'Sam'], performer_entities: [{ id: 101 }, { id: 102 }] }));
+    const link = credited.host.querySelector<HTMLAnchorElement>('a[data-media-who]')!;
+    expect(link.getAttribute('href')).toBe('/performers/101');
+    await click(link);
+    expect(credited.actions.openEntity).toHaveBeenCalledWith('performer', 'Alex');
+    expect(credited.onOpen).not.toHaveBeenCalled();
+  });
+
   it('多选模式或按着修饰键时，点哪里都是切换选中；Shift 是连选', async () => {
     const plain = await render(item(9));
     const title = plain.card.querySelector<HTMLElement>('[data-media-title]')!;

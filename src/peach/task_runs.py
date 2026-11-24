@@ -94,6 +94,7 @@ TASK_LABELS = {
     "scraping-cover": "封面采集",
     "media-repair": "媒体修复",
     "organize": "按模板整理",
+    "metadata-edit": "保存资料",
     "batch": "批量操作",
     "scrape-codes": "番号资料刮削",
     "jav-covers": "封面批量抓取",

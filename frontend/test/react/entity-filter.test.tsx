@@ -10,7 +10,7 @@ import {
   videoOnly, type EntityFilterActions, type EntityFilterHelpers, type EntityFilterProps, type EntityOnlineHead,
 } from '../../src/react/entity-filter/entity-filter';
 import { FOLLOW_FILTERS } from '../../src/react/follow-feed/follow-feed';
-import { click, mount, settle } from './render';
+import { choose, click, mount, settle } from './render';
 
 const STATES = [{ k: '', label: '全部' }, { k: 'fresh', label: '没看过' }, { k: 'later', label: '稍后看' }, { k: 'flagged', label: '已标记' }];
 const LAYOUTS = [['big', '大图', 'maximize'], ['small', '小图', 'layout-grid']] as const;
@@ -71,9 +71,8 @@ describe('作品视图', () => {
     expect($(host, '[data-entity-combo]')?.hidden).toBe(false);
     expect($$(host, '[data-combo-chip]').map((chip) => chip.firstChild?.textContent)).toEqual(['中出', '厂牌 S1']);
     expect($(host, '[data-entity-readout]')?.textContent).toBe('视频 · 24 · 中出');
-    expect($(host, '[data-entity-sort="release"]')?.querySelector('svg')).not.toBeNull();
-    expect($(host, '[data-entity-sort="rating"]')?.querySelector('svg')).toBeNull();
-    expect($(host, '[data-entity-sort="rating"]')?.getAttribute('aria-label')).toBe('按评分从高到低排序');
+    expect($(host, '[data-video-sort] [aria-haspopup="listbox"]')?.textContent).toBe('发行时间');
+    expect($(host, '[aria-label="作品改为升序"]')).not.toBeNull();
     expect($(host, '[data-entity-layout][aria-label="JAV 卡片版式"]')).not.toBeNull();
     expect($(host, '[data-photo-back]')).toBeNull();
   });
@@ -88,7 +87,7 @@ describe('作品视图', () => {
     await click($(host, '[aria-label="撤掉 中出"]')!);
     await click($(host, '[aria-label="撤掉 厂牌 S1"]')!);
     await click($(host, '[data-combo-clear]')!);
-    await click($(host, '[data-entity-sort="rating"]')!);
+    await choose($(host, '[data-video-sort] [aria-haspopup="listbox"]'), '评分');
     await click($(host, '[data-entity-batch]')!);
     expect(shell.setView).toHaveBeenCalledWith('photos');
     // 已经按下的那一枚再点不发请求。

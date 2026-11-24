@@ -1,5 +1,7 @@
 # 复用清单
 
+作品卡片排序复用列表的 `DataTableSort` 与 BoardUI Select，选项由 `sort-preferences.ts` 的 `CATALOG_SORT_OPTIONS` 统一提供；实体资料链接复用 `entityPath` 和现有导航动作。未新增依赖、接口或数据表。
+
 前端测试的 DOM 环境固定为 Happy DOM 21.0.4（MIT），用于 Node 24 与 Vitest 5，不进入应用运行包。该版本覆盖 [GHSA-834v-8h66-3h79](https://github.com/advisories/GHSA-834v-8h66-3h79) 的修复；依赖审计与现有组件行为测试共同核验，无新增运行时依赖。
 
 演员与厂牌的个人评分汇总由 `web_entity_feedback.summaries` 批量读取，复用 `web_entity.scope_predicate` 的实体范围、子厂牌递归与本地喜欢记录。React 的 `SceneFeedbackSummary` 同时供资料页和名册使用，复用 Remix Icon 星级及偏好图标，无新增依赖或汇总表。
@@ -806,6 +808,8 @@ NZB 下载交接采用 [SABnzbd 5.1 官方 API](https://sabnzbd.org/wiki/configu
 NZBGet 采用[官方 JSON-RPC 协议](https://nzbget.com/documentation/api/)的 Basic Auth、`version` 与 `append`，使用自 v13 稳定的九参数 URL 入队形态，保留分类与默认去重模式。核对维护中的 [nzbgetcom/nzbget 服务端实现](https://github.com/nzbgetcom/nzbget/blob/develop/daemon/remote/XmlRpc.cpp) 确认后续可选参数和正数 NZBID；未复制 GPL-2.0-or-later 服务端代码。SABnzbd 与 NZBGet 共用有界 HTTPX 传输、本机凭据存储和前端表单，没有新增依赖；临时凭据与假 HTTP 服务覆盖密码保留／撤销、认证、签名 URL、RPC 错误和失败身份。真实 NZBGet 服务验收未取得。
 
 忽略词匹配复用标准库 `re.escape`／大小写不敏感替换与 `PureWindowsPath`，本地文件名和 StashDB 提示共用字面清洗规则。定向重匹配复用既有 Aho–Corasick 演员索引、按来源归属写入、StashDB 查询及统一处理任务的停止／恢复；不增加扫描器、抽帧或网络依赖。Following 刷新复用两个既有检查端点和来源时间戳，手机控件复用播放器活动状态、全屏控件与紧凑布局。没有新增依赖。
+
+目录跨页选择复用 `media_folders.path_predicate` 的来源与路径边界，不读取媒体文件。目录多项资料复用 `folder_rules` 的独立来源、预览版本和扫描继承；厂牌、系列与演员使用既有实体关系及字段投影。资料保存复用 `BackgroundJob`、`watchJob`、Sonner 与 `TaskPopup`，批量资料按每批 200 项使用既有写入契约；部分批次失败保留实际完成数，成功终态刷新馆藏。编辑入队复用当前 Python 标准库 `ThreadPoolExecutor(max_workers=1)`，沿用既有媒体探测、资料处理及 API 线程池的生命周期模式；Peach 只保存独立身份、固定输入、排队位置与通知观察记录。工作者依次等待 `BackgroundJob` 完整结算，一项失败不阻断后续项。没有新增依赖。
 
 ## 演员批量合并与撤销
 

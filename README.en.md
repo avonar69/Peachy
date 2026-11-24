@@ -10,6 +10,12 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 ## Peachy features
 
+Thumbnail view and list view share a sort dropdown and direction control. Actor names in cards and list rows open the actor's profile.
+
+Directory rules can assign each video's containing subfolder name as its actor, excluding videos directly in the selected parent. Reopening settings loads the saved rule. New rules enable inheritance for new files by default; saved choices are retained.
+
+Folder lists support selecting every video across pages. Directory rules can combine a studio, series and multiple actors, apply to subfolders, and carry those assignments to new files. Scene and folder saves close the editor immediately and show progress or errors in the background-task popup. Additional edits wait in submission order and start automatically; each edit has its own status and completion receipt.
+
 - **Languages and LAN access:** English by default, with Simplified/Traditional Chinese, Vietnamese, Japanese, Korean, German, Spanish, French and Portuguese. Settings, tasks, diagnostics and review screens are localized; LAN connections and ordinary HTTP origins are supported.
 - **StashDB matching and review:** Combines filename, actor folder, studio, release date, duration and optional OSHASH evidence. Includes ignored text, adjustable confidence, quick application of saved scores, recent-media retries, a shared review queue and separate actor/studio/scene resync with manual edits protected.
 - **Actor and studio information:** Actor photos, aliases, biographical details and scene tags; actor merging with backup and undo. Profiles and browsing cards show your average scene rating and thumbs-up/down totals, excluding unrated videos from the average.
@@ -20,7 +26,7 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 Download from [Peachy Releases](https://github.com/avonar69/Peachy/releases). These custom features are maintained by this fork and are not a claim that upstream Peach has merged them. See the installation and Docker instructions below, or [中文说明](README.md#简体中文).
 
-Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
+Custom build: RSS downloads in Manage following show illustrated posts with a main thumbnail, every preview image, and inline AllDebrid/Real-Debrid download icons. Post titles open the original article. Clear finished hides completed, failed or cancelled tasks, including failed link preparation; Close dismisses the popup when no transfer or import is active. Each feed can hide unsupported links. Configure a provider under Download providers; choose a container-visible folder for server downloads or leave it blank for browser downloads. See [test-build instructions](TEST-PACKAGE.en.md).
 
 Following → All includes RSS updates. Each RSS feed has its own automatic-update switch and interval, defaulting to 6 hours; turning it off keeps saved posts and allows manual refresh.
 

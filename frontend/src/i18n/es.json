@@ -3484,7 +3484,7 @@
   "第 {1} 页": "Página {1}",
   "等": "etc.",
   "等 {0} 个名字": "Esperando {0} nombres",
-  "等 {0} 人": "Esperando a {0} personas",
+  "等 {0} 人": "({0} intérpretes)",
   "等你在浏览器窗口里登录 PikPak": "Esperando que inicie sesión en PikPak en la ventana del navegador",
   "等同于 {0}": "Equivalente a {0}",
   "等宽无衬线": "Sans serif de ancho constante",

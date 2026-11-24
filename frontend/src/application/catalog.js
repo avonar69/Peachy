@@ -11,7 +11,7 @@ import { confirmModal, dissolveValue, fitSkeleton, wireHorizontalScroller } from
 import { navigationState, paintSidebar, syncNavigation } from './navigation.js';
 import { disposeStage, mediaState, openEditions, openItem, openMix, openParts, openTok } from './media.js';
 import { buildManageBar, cardLayout, homeLayoutActive, javActive, layoutState, setHomeLayout, setJavLayout, showHomeSurfaces } from './layout.js';
-import { selectionState, setSelectMode, toggleSelection } from './selection.js';
+import { selectionState, setSelectMode, toggleSelection, selectMany } from './selection.js';
 import { javDisplayName, javTitleHtml } from '../core/jav-title';
 import { tagLabel } from '../core/tags';
 import { loadStage, stageApi } from '../react/application-residents';
@@ -568,6 +568,7 @@ catalogState.gridActions = {
     window.scrollTo({top:0,behavior:'smooth'});
   },
   toggleSelection:(id,range)=>toggleSelection(id,range),
+  selectMany,
   watchLater:(it,onChange)=>toggleWatchLater(it,onChange),
   resourceOperation:(it,operation)=>runResourceOperation(it,operation),
   mixRelated:seedId=>mixRelated(seedId),

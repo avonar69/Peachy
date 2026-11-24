@@ -72,6 +72,8 @@ describe('首页文件夹浏览', () => {
         await page.screenshot({ path: join(screenshots, `${viewport.name}-rule.png`), fullPage: false });
         await rule.getByRole('button', { name: '保存目录用途', exact: true }).click();
         await rule.waitFor({ state: 'hidden' });
+        await page.locator('[data-processing-dock]').getByText('资料已保存').waitFor();
+        await page.locator('[data-processing-dock]').getByRole('button', { name: '关闭', exact: true }).click();
         const saved = await (await page.request.get(new URL(`/api/folders?loc=local&folder=${root.id}`, page.url()).toString())).json();
         assert.equal(saved.rule.purpose, 'category');
         await page.getByRole('button', { name: '设置目录用途', exact: true }).click();

@@ -74,14 +74,14 @@ export function DebridTaskProgress({ job, cancel, readOnly, compact = false }: {
   </div>;
 }
 
-function DownloadPanel({ jobs, providers, readOnly, problem }: {
-  jobs: DebridJob[]; providers: DebridProvider[]; readOnly: boolean; problem: string;
+function DownloadPanel({ jobs, providers, readOnly, problem, dismiss }: {
+  jobs: DebridJob[]; providers: DebridProvider[]; readOnly: boolean; problem: string; dismiss(): void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const action = useAction();
   const scroller = useOverlayScrollbar<HTMLDivElement>();
   const running = jobs.filter(active).length;
-  const finished = jobs.some(job => job.kind === 'download' && !active(job) && ['complete', 'failed', 'cancelled'].includes(job.status));
+  const finished = jobs.some(job => !active(job) && ['complete', 'failed', 'cancelled'].includes(job.status));
   const refresh = () => { void queryClient.invalidateQueries({ queryKey: KEY });
     void queryClient.invalidateQueries({ queryKey: ['rss-downloads'] }); };
   return <TaskPopup label="Debrid downloads" title="Debrid downloads" expanded={expanded} toggle={() => setExpanded(!expanded)} measure
@@ -94,6 +94,7 @@ function DownloadPanel({ jobs, providers, readOnly, problem }: {
       <Button size="small" variant="secondary" disabled={readOnly || !finished || !!action.busy} onClick={() => {
         void action.run('clear-finished', signal => apiSend('/api/rss/clear-finished', {}, 'POST', signal), refresh);
       }}>Clear finished</Button>
+      {!running ? <Button size="small" variant="secondary" onClick={dismiss}>关闭</Button> : null}
     </div>}>
     {problem || action.error ? <Note tone="error">{problem || action.error}</Note> : null}
     <div ref={scroller} className="flex max-h-64 min-w-0 flex-col gap-3 overflow-auto overscroll-contain">
@@ -142,7 +143,7 @@ export function DebridDownloadDock() {
     const running = jobs.some(active);
     const needsAttention = state.isError || jobs.some(job => ['ready', 'failed'].includes(job.status) || job.import_state === 'failed');
     toast.custom(() => <div className="peach-react"><DownloadPanel jobs={jobs} providers={data?.providers || []}
-      readOnly={!!data?.read_only} problem={state.isError ? errorMessage(state.error) : ''} /></div>, {
+      readOnly={!!data?.read_only} problem={state.isError ? errorMessage(state.error) : ''} dismiss={() => saveTracked([])} /></div>, {
       id: TOAST, toasterId: 'processing', className: 'processing-task-toast',
       duration: running || needsAttention ? Infinity : 8000, dismissible: !running, closeButton: !running,
       onDismiss: () => saveTracked([]), onAutoClose: () => saveTracked([]),

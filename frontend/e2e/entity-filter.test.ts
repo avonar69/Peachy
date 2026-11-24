@@ -193,14 +193,13 @@ describe('实体页筛选浮层', () => {
     try {
       const { page, stubs } = opened;
       stubs.hold();
-      await page.locator('[data-entity-sort="rating"]').click();
-      assert.equal(await page.locator('[data-entity-sort="rating"]').getAttribute('aria-pressed'), 'true');
-      assert.equal(await page.locator('[data-entity-sort="new"]').getAttribute('aria-pressed'), 'false');
-      assert.equal(await page.locator('[data-entity-sort="rating"] svg').count(), 1, '选中的排序键没有方向箭头');
+      await page.locator('[data-video-sort]').getByRole('button', { name: /作品排序/ }).click();
+      await page.getByRole('option', { name: '评分', exact: true }).click();
+      assert.match(await page.locator('[data-video-sort] [aria-haspopup="listbox"]').innerText(), /评分/);
+      assert.equal(await page.getByRole('button', { name: '作品改为升序', exact: true }).count(), 1);
       stubs.release();
       await page.locator('[data-entity-readout]', { hasText: '视频 · 24' }).waitFor({ timeout: 15_000 });
-      assert.equal(await page.locator('[data-entity-sort="rating"]').getAttribute('aria-label'), '按评分从低到高排序');
-      await page.locator('[data-entity-sort="rating"]').click();
+      await page.getByRole('button', { name: '作品改为升序', exact: true }).click();
       await page.locator('[data-entity-readout]', { hasText: '视频 · 24' }).waitFor({ timeout: 15_000 });
       assert.match(page.url(), /[?&]dir=asc/);
       const before = stubs.itemQueries.length;
@@ -313,7 +312,7 @@ describe('实体页筛选浮层', () => {
       await page.locator('[data-media-view="videos"]').click();
       await page.locator('[data-entity-readout]', { hasText: '视频 · 24' }).waitFor({ timeout: 15_000 });
       assert.equal(await page.locator('[data-entity-tag]').count(), AGENCY.tags.length);
-      assert.ok(await page.locator('[data-entity-sort]').count() > 0);
+      assert.ok(await page.locator('[data-video-sort]').count() > 0);
       assert.equal(await page.locator('[data-entity-layout][aria-label="JAV 卡片版式"]').count(), 0);
       assertCovers(await glideOver(page, '[data-view-glide="round"]', '[data-media-view="videos"]'), '视频键');
       await page.locator('[data-media-view="people"]').click();

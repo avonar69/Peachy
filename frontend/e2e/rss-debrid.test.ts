@@ -14,6 +14,7 @@ describe('RSS and debrid downloads', () => {
     const state = { providers: [{ id: 'alldebrid', label: 'AllDebrid', configured: true, download_folder: '', hosts: ['rg.to'] }],
       sources: [{ id: 1, name: 'Example RSS', enabled: true, interval_minutes: 360, hide_unsupported: false }],
       items: [{ id: 1, source_id: 1, title: 'Studio - Example Actor', feed_name: 'Example RSS', published_at: '2026-10-25T01:32:24Z',
+        link: 'https://example.org/posts/example',
         description: 'This prose must stay hidden.',
         images: { main: { src: 'https://images.example.org/main.webp', href: 'https://images.example.org/main' },
           previews: [{ src: 'https://images.example.org/preview.webp', href: 'https://images.example.org/full-preview' },
@@ -38,6 +39,7 @@ describe('RSS and debrid downloads', () => {
     });
     try {
       const page = opened.page, article = page.locator('article');
+      assert.equal(await article.locator('h4 a').getAttribute('href'), 'https://example.org/posts/example');
       const interval = page.getByRole('spinbutton', { name: 'Update interval for Example RSS (hours)' });
       assert.equal(await interval.inputValue(), '6');
       await interval.fill('2');
@@ -65,6 +67,7 @@ describe('RSS and debrid downloads', () => {
       assert.equal(await interval.inputValue(), '2');
       assert.equal(await page.getByRole('switch', { name: 'Enable Example RSS', exact: true }).isChecked(), false);
       assert.equal(await article.locator('a[href="https://unsupported.example.org/page"]').count(), 0);
+      assert.equal(await article.locator('h4 a').getAttribute('href'), 'https://example.org/posts/example');
       await page.getByRole('switch', { name: /Hide unsupported links/ }).press('Space');
       await article.locator('a[href="https://unsupported.example.org/page"]').waitFor();
       assert.deepEqual(opened.problems.filter(problem => problem.startsWith('pageerror')), []);

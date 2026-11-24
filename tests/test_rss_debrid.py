@@ -448,6 +448,24 @@ class RSSDebridTests(unittest.TestCase):
         self.assertEqual(rows[child['id']]['parent_id'], parent['id'])
         self.assertEqual(restored.clear_finished()['cleared'], 0)
 
+    def test_failed_link_preparation_can_be_cleared_without_hiding_active_jobs(self):
+        self.provider()
+        service = self.service()
+        failed = service.submit(1, {'kind': 'link', 'url': 'https://rg.to/file/failed'}, 'alldebrid')
+        pending = service.submit(2, {'kind': 'link', 'url': 'https://rg.to/file/pending'}, 'alldebrid')
+        service._update(failed['id'], status='failed', error='Provider request failed.')
+        self.assertEqual(service.clear_finished()['cleared'], 1)
+        restored = debrid_service.Service(self.config)
+        self.addCleanup(restored.stop)
+        rows = {row['id']: row for row in restored.snapshot()}
+        self.assertTrue(rows[failed['id']]['dismissed'])
+        self.assertFalse(rows[pending['id']]['dismissed'])
+        self.assertEqual(restored.clear_finished()['cleared'], 0)
+        restored.start = Mock()
+        retried = restored.submit(1, {'kind': 'link', 'url': 'https://rg.to/file/failed'}, 'alldebrid')
+        self.assertEqual(retried['status'], 'queued')
+        self.assertFalse(retried['dismissed'])
+
     def test_saved_rss_posts_are_paginated_with_twenty_as_default(self):
         with self.database.write_transaction() as connection:
             connection.executemany('INSERT INTO feed_item(source_id,item_key,title,first_seen) VALUES(?,?,?,?)',

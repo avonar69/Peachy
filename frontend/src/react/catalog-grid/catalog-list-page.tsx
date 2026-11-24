@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, type MouseEvent } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper, flexRender, rowPaginationFeature, rowSelectionFeature, rowSortingFeature,
   tableFeatures, useTable, type RowSelectionState, type SortingState,
 } from '@tanstack/react-table';
 import { cardArtwork, relayoutCovers } from '@peach/card-art';
-import { fmtDur, fmtSize, requestErrorMessage } from '@peach/legacy/core';
+import { entityPath, fmtDur, fmtSize, requestErrorMessage } from '@peach/legacy/core';
+import { CATALOG_SORT_OPTIONS } from '../../sort-preferences';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
+import { Button } from '@/components/base/buttons/button';
+import { Note } from '../components/note';
+import { useAction, busyProps } from '../settings/use-action';
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@/components/base/table/table';
 import { ChevronSortDown } from '@/components/foundations/icons/chevrons';
 import { apiGet } from '../../api';
@@ -23,18 +27,13 @@ import type { CatalogGridProps, MediaItem, MediaPage } from './types';
 import './catalog-list.css';
 
 const features = tableFeatures({ rowSortingFeature, rowSelectionFeature, rowPaginationFeature });
-const sortOptions = [
-  { id: 'name', label: '名称' }, { id: 'dur', label: '时长' }, { id: 'size', label: '体积' },
-  { id: 'new', label: '入库时间' }, { id: 'release', label: '发行时间' },
-  { id: 'rating', label: '评分' }, { id: 'o', label: '高潮计数' },
-  { id: 'plays', label: '观看次数' }, { id: 'played', label: '观看时间' },
-];
 interface ListState { sorting: SortingState; pagination: { pageIndex: number; pageSize: number } }
 // 详情返回保留同一筛选范围内的页码与列排序。
 const positions = new Map<string, ListState>();
 
 /** 服务端对完整筛选结果排序、分页；选择集及批量栏归现有馆藏控制器。 */
 export function CatalogListPage(props: CatalogGridProps) {
+  const folderAction = useAction();
   const params = catalogParams(props.filters || {}, false);
   const [scope] = useState(() => {
     const position = new URLSearchParams(params);
@@ -65,6 +64,15 @@ export function CatalogListPage(props: CatalogGridProps) {
   });
   const items = result.data?.items || [];
   const total = Number(result.data?.total || 0);
+  const folder = props.filters?.folder;
+  const allShown = items.length > 0 && items.every(item => props.selected.has(item.id));
+  const selectFolder = () => {
+    const query = new URLSearchParams({ folder: folder!, folder_recursive: props.filters?.folder_recursive || '1',
+      loc: props.filters?.loc || '', library: props.filters?.library || '' });
+    void folderAction.run('select', signal => apiGet<{ ids: number[] }>(`/api/folders/selection?${query}`, signal),
+      data => { if (props.actions.selectMany) props.actions.selectMany(data.ids);
+        else data.ids.filter(id => !props.selected.has(id)).forEach(id => props.actions.toggleSelection(id, false)); });
+  };
   useLayoutEffect(() => {
     if (result.isFetching) return;
     let live = true;
@@ -121,9 +129,14 @@ export function CatalogListPage(props: CatalogGridProps) {
   });
   return <div data-catalog-view-mode="list" data-catalog-table="" aria-busy={result.isFetching || undefined} className="flex min-w-0 flex-col gap-4">
     <div className="flex flex-wrap justify-end gap-2" role="toolbar" aria-label="作品列表工具栏">
-      <DataTableSort label="作品列表" options={sortOptions} sorting={sorting}
+      <DataTableSort label="作品列表" options={CATALOG_SORT_OPTIONS} sorting={sorting}
         onChange={next => table.setSorting(next)} />
     </div>
+    {folder && allShown ? <div className="flex flex-wrap items-center gap-2" role="region" aria-label="文件夹选择范围">
+      <span>已选择本页作品</span><Button size="small" variant="secondary" {...busyProps(!!folderAction.busy)}
+        onClick={selectFolder}>选择文件夹中的全部作品</Button>
+    </div> : null}
+    {folderAction.error ? <Note tone="error">{folderAction.error}</Note> : null}
     <LibraryCompletionPrompt assetIds={props.filters?.state === 'trash' ? [] : missingPreviewIds(items, props.layout.javImage)} />
     {result.isError ? <RetryNote message={requestErrorMessage(result.error)} onRetry={() => void result.refetch()} /> : null}
     <DataTableFrame follow onRowClick={id => { if (!result.isPlaceholderData) props.actions.toggleSelection(Number(id), false) }}>
@@ -156,20 +169,29 @@ export function CatalogListPage(props: CatalogGridProps) {
 function ListIdentity({ item, props, disabled }: { item: MediaItem; props: CatalogGridProps; disabled: boolean }) {
   const artwork = cardArtwork(item, 'small', false, props.layout.javImage);
   const name = props.helpers.displayName(item, item.name || '').trim() || '未命名作品';
-  const who = item.creator || item.performers?.join('、') || item.studio;
+  const who = item.creator || item.studio;
+  const open = (event: MouseEvent<HTMLElement>) => {
+    if (props.selectMode || event.shiftKey || event.ctrlKey || event.metaKey) {
+      props.actions.toggleSelection(item.id, event.shiftKey); return;
+    }
+    const action = props.filters?.state === 'trash' ? props.actions.openResource : props.actions.open;
+    action(item, event.currentTarget);
+  };
   return <div data-list-identity="">
-    <button type="button" data-list-open="" disabled={disabled} aria-label={`打开 ${name}`} onClick={event => {
-      if (props.selectMode || event.shiftKey || event.ctrlKey || event.metaKey) {
-        props.actions.toggleSelection(item.id, event.shiftKey); return;
-      }
-      const open = props.filters?.state === 'trash' ? props.actions.openResource : props.actions.open;
-      open(item, event.currentTarget);
-    }}>
-      <span data-list-picture=""><MediaBadges item={item} compact />{artwork.html
-        ? <ArtSlot artwork={artwork} relayout={root => relayoutCovers(root, 'small')} /> : <span>无预览</span>}</span>
-      <span data-list-text=""><span data-list-name="" title={name}>{name}</span>
-        <span data-list-byline="">{who || '未归属'}<span data-list-mobile-metrics="">{fmtDur(item.duration)} · {fmtSize(item.size)}</span></span>
+    <div data-list-layout="">
+      <button type="button" data-list-open="" data-list-picture="" disabled={disabled} aria-label={`打开 ${name}`} onClick={open}>
+        <MediaBadges item={item} compact />{artwork.html
+          ? <ArtSlot artwork={artwork} relayout={root => relayoutCovers(root, 'small')} /> : <span>无预览</span>}</button>
+      <span data-list-text=""><button type="button" data-list-open="" data-list-name="" disabled={disabled} title={name} onClick={open}>{name}</button>
+        <span data-list-byline="">{item.performers?.length ? item.performers.map((actor, index) => <span key={`${actor}:${index}`}>
+          {index ? '、' : ''}<a href={entityPath('performer', actor, item.performer_entities?.[index]?.id)}
+            aria-disabled={disabled || undefined} onClick={event => {
+              event.preventDefault(); event.stopPropagation();
+              if (disabled) return;
+              if (props.selectMode || event.shiftKey || event.ctrlKey || event.metaKey) props.actions.toggleSelection(item.id, event.shiftKey);
+              else props.actions.openEntity('performer', actor);
+            }}>{actor}</a></span>) : who || '未归属'}<span data-list-mobile-metrics="">{fmtDur(item.duration)} · {fmtSize(item.size)}</span></span>
       </span>
-    </button>
+    </div>
   </div>;
 }
