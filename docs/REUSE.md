@@ -1,5 +1,7 @@
 # 复用清单
 
+作品卡片排序复用列表的 `DataTableSort` 与 BoardUI Select，选项由 `sort-preferences.ts` 的 `CATALOG_SORT_OPTIONS` 统一提供；实体资料链接复用 `entityPath` 和现有导航动作。未新增依赖、接口或数据表。
+
 前端测试的 DOM 环境固定为 Happy DOM 21.0.4（MIT），用于 Node 24 与 Vitest 5，不进入应用运行包。该版本覆盖 [GHSA-834v-8h66-3h79](https://github.com/advisories/GHSA-834v-8h66-3h79) 的修复；依赖审计与现有组件行为测试共同核验，无新增运行时依赖。
 
 演员与厂牌的个人评分汇总由 `web_entity_feedback.summaries` 批量读取，复用 `web_entity.scope_predicate` 的实体范围、子厂牌递归与本地喜欢记录。React 的 `SceneFeedbackSummary` 同时供资料页和名册使用，复用 Remix Icon 星级及偏好图标，无新增依赖或汇总表。

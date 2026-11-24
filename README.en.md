@@ -10,6 +10,8 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 ## Peachy features
 
+Thumbnail view and list view share a sort dropdown and direction control. Actor names in cards and list rows open the actor's profile.
+
 Directory rules can assign each video's containing subfolder name as its actor, excluding videos directly in the selected parent. Reopening settings loads the saved rule. New rules enable inheritance for new files by default; saved choices are retained.
 
 Folder lists support selecting every video across pages. Directory rules can combine a studio, series and multiple actors, apply to subfolders, and carry those assignments to new files. Scene and folder saves close the editor immediately and show progress or errors in the background-task popup. Additional edits wait in submission order and start automatically; each edit has its own status and completion receipt.

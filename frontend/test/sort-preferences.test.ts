@@ -10,13 +10,13 @@ it('随机无方向，首页偏好与其他排序分别解析', () => {
   expect(preferredDirection('rating', 'new', 'asc')).toBe('desc');
 });
 
-it('可翻转的列从 desc 起，随机没有方向；发行时间只在 JAV 语境出现但也是合法键', () => {
+it('可翻转的列从 desc 起，随机没有方向，名称与发行时间均为合法键', () => {
   expect([defaultSortDir('new'), defaultSortDir('seed'), defaultSortDir('unknown')]).toEqual(['desc', '', '']);
-  expect(SORT_KEYS).toEqual(['seed', 'rating', 'o', 'plays', 'dur', 'size', 'new', 'played', 'release']);
+  expect(SORT_KEYS).toEqual(['seed', 'rating', 'o', 'plays', 'dur', 'size', 'new', 'played', 'name', 'release']);
   expect([sortDirWord('dur', 'asc'), sortDirWord('dur', 'desc'), sortDirWord('seed', 'asc')]).toEqual(['从短到长', '从长到短', '']);
   /* 列名中性，方向词按列各说各的：同一个 desc 在时间列上是「从新到旧」，在时长上是「从长到短」。 */
   expect([...SORTS.map(([, label]) => label), JAV_RELEASE_SORT[1]])
-    .toEqual(['随机', '评分', '高潮计数', '观看次数', '时长', '体积', '入库时间', '观看时间', '发行时间']);
+    .toEqual(['随机', '评分', '高潮计数', '观看次数', '时长', '体积', '入库时间', '观看时间', '名称', '发行时间']);
   expect(['new', 'played'].map((key) => [sortDirWord(key, 'desc'), sortDirWord(key, 'asc')]))
     .toEqual([['从新到旧', '从旧到新'], ['从近到远', '从远到近']]);
 });

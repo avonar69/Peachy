@@ -47,7 +47,7 @@ async function until(done: () => boolean, message: string, timeout = 10_000) {
 }
 
 /** 打开首页：桩装好之后重新载入，等到读数出现、等待态结束。 */
-async function openHome(browser: Browser, path = '/', viewport = DESKTOP): Promise<ItemVisit & { counts: Counts }> {
+async function openHome(browser: Browser, path = '/', viewport = DESKTOP, withActors = false): Promise<ItemVisit & { counts: Counts }> {
   const opened = await openItemPage(browser, '/', viewport, { ready: '#grid [data-media-card]' });
   const { page } = opened;
   const counts: Counts = { items: [], facets: [], tops: [] };
@@ -70,7 +70,8 @@ async function openHome(browser: Browser, path = '/', viewport = DESKTOP): Promi
     const ids = url.searchParams.get('tag') ? CATALOG.slice(0, 3) : CATALOG;
     return route.fulfill({ json: {
       items: ids.map((id) => ({ id, name: `sample_${id}.mp4`, title: `演示作品 ${id}`, is_jav: false, medium: 'video',
-        location: 'local', has_thumb: true, duration: 3600, studio: 'Peach Studio', performers: [], tags: [] })),
+        location: 'local', has_thumb: true, duration: 3600, studio: 'Peach Studio',
+        performers: withActors ? ['Alex', 'Sam'] : [], performer_entities: withActors ? [{ id: 1 }, { id: 2 }] : [], tags: [] })),
       total: ids.length, has_more: false,
     } });
   });
@@ -241,21 +242,25 @@ describe('首页筛选条', () => {
     }
   });
 
-  it('排序键：按下态当场到位，网格只重取一次；再点一次同一枚翻方向', { timeout: 60_000 }, async () => {
-    const opened = await openHome(browser);
+  for (const viewport of [DESKTOP, PHONE]) it(`${viewport.name} 排序下拉框按选项重取一次，方向按钮翻转排序`, { timeout: 60_000 }, async () => {
+    const opened = await openHome(browser, '/', viewport);
     try {
       const { page, counts } = opened;
-      const key = page.locator(`${FILTER} [data-entity-sort="new"]`);
+      const key = page.locator(`${FILTER} [data-video-sort]`).getByRole('button', { name: /作品排序/ });
       const before = counts.items.length;
-      await key.click();
-      await page.locator(`${FILTER} [data-entity-sort="new"][aria-pressed="true"]`).waitFor({ timeout: 2_000 });
+      await key.scrollIntoViewIfNeeded();
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      if (viewport.mobile) await key.tap(); else await key.click();
+      const option = page.getByRole('option', { name: '入库时间', exact: true });
+      if (viewport.mobile) await option.tap(); else await option.click();
+      await page.locator(`${FILTER} [data-video-sort]`).getByRole('button', { name: '作品改为升序', exact: true }).waitFor();
       await until(() => counts.items.length > before, '换排序之后没有重取列表');
       await settle(page);
       assert.deepEqual(counts.items.slice(before).map((url) => url.searchParams.get('sort')), ['new'],
         '换一次排序应当只重取一次列表');
       /* 只数第一页：厂牌那排挂上时在右端，续要的那次空页与排序无关。 */
       assert.equal(counts.tops.filter((url) => !url.searchParams.has('page')).length, 1, '换排序不该重取两排头像');
-      await key.click();
+      await page.locator(`${FILTER} [data-video-sort]`).getByRole('button', { name: '作品改为升序', exact: true }).click();
       await until(() => counts.items.length > before + 1, '翻方向之后没有重取列表');
       await settle(page);
       assert.deepEqual(counts.items.slice(before).map((url) => url.searchParams.get('dir') || ''), ['desc', 'asc']);
@@ -263,6 +268,34 @@ describe('首页筛选条', () => {
     } finally {
       await opened.close();
     }
+  });
+
+  for (const viewport of [DESKTOP, PHONE]) for (const view of ['卡片', '列表']) it(`${viewport.name} ${view}演员姓名打开资料页`, { timeout: 60_000 }, async () => {
+    const opened = await openHome(browser, '/', viewport, true);
+    const { page } = opened;
+    try {
+      if (view === '列表') {
+        await page.getByRole('radiogroup', { name: '馆藏显示方式' }).locator('label')
+          .filter({ has: page.getByRole('radio', { name: '列表', exact: true }) }).click();
+        await page.locator('[data-list-byline] a').first().waitFor();
+      }
+      const link = page.locator(view === '列表' ? '[data-list-byline] a' : '#grid a[data-media-who]').first();
+      const actor = (await link.innerText()).trim();
+      const href = await link.getAttribute('href');
+      assert.match(href || '', /^\/performers\//);
+      await page.route(url => url.pathname === '/api/entity', route => route.fulfill({ json: {
+        id: 1, kind: 'performer', canonical_name: actor, aliases: [], display_aliases: [], user_aliases: [],
+        asset_count: 2, tags: [], related_performers: [], links: [], entry_links: [], metadata: {},
+        has_image: false, has_avatar: false, avatar_focus: null, representative_asset_id: null, feed: null,
+      } }));
+      await link.click();
+      await page.waitForURL(url => url.pathname === href);
+      await page.locator('[data-entity-title]').getByRole('heading', { name: actor, exact: true }).waitFor();
+      assert.equal(await page.locator('#stage[open]').count(), 0);
+      assert.deepEqual(withoutPlayer(opened.problems), []);
+      const box = await layout(page);
+      assert.ok(box.scrollWidth <= box.viewportWidth);
+    } finally { await opened.close() }
   });
 
   it('卡片版式：只重画不重取，选择记进设置', { timeout: 60_000 }, async () => {

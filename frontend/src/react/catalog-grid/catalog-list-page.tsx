@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, type MouseEvent } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper, flexRender, rowPaginationFeature, rowSelectionFeature, rowSortingFeature,
   tableFeatures, useTable, type RowSelectionState, type SortingState,
 } from '@tanstack/react-table';
 import { cardArtwork, relayoutCovers } from '@peach/card-art';
-import { fmtDur, fmtSize, requestErrorMessage } from '@peach/legacy/core';
+import { entityPath, fmtDur, fmtSize, requestErrorMessage } from '@peach/legacy/core';
+import { CATALOG_SORT_OPTIONS } from '../../sort-preferences';
 import { Checkbox } from '@/components/base/checkbox/checkbox';
 import { Button } from '@/components/base/buttons/button';
 import { Note } from '../components/note';
@@ -26,12 +27,6 @@ import type { CatalogGridProps, MediaItem, MediaPage } from './types';
 import './catalog-list.css';
 
 const features = tableFeatures({ rowSortingFeature, rowSelectionFeature, rowPaginationFeature });
-const sortOptions = [
-  { id: 'name', label: '名称' }, { id: 'dur', label: '时长' }, { id: 'size', label: '体积' },
-  { id: 'new', label: '入库时间' }, { id: 'release', label: '发行时间' },
-  { id: 'rating', label: '评分' }, { id: 'o', label: '高潮计数' },
-  { id: 'plays', label: '观看次数' }, { id: 'played', label: '观看时间' },
-];
 interface ListState { sorting: SortingState; pagination: { pageIndex: number; pageSize: number } }
 // 详情返回保留同一筛选范围内的页码与列排序。
 const positions = new Map<string, ListState>();
@@ -134,7 +129,7 @@ export function CatalogListPage(props: CatalogGridProps) {
   });
   return <div data-catalog-view-mode="list" data-catalog-table="" aria-busy={result.isFetching || undefined} className="flex min-w-0 flex-col gap-4">
     <div className="flex flex-wrap justify-end gap-2" role="toolbar" aria-label="作品列表工具栏">
-      <DataTableSort label="作品列表" options={sortOptions} sorting={sorting}
+      <DataTableSort label="作品列表" options={CATALOG_SORT_OPTIONS} sorting={sorting}
         onChange={next => table.setSorting(next)} />
     </div>
     {folder && allShown ? <div className="flex flex-wrap items-center gap-2" role="region" aria-label="文件夹选择范围">
@@ -174,20 +169,29 @@ export function CatalogListPage(props: CatalogGridProps) {
 function ListIdentity({ item, props, disabled }: { item: MediaItem; props: CatalogGridProps; disabled: boolean }) {
   const artwork = cardArtwork(item, 'small', false, props.layout.javImage);
   const name = props.helpers.displayName(item, item.name || '').trim() || '未命名作品';
-  const who = item.creator || item.performers?.join('、') || item.studio;
+  const who = item.creator || item.studio;
+  const open = (event: MouseEvent<HTMLElement>) => {
+    if (props.selectMode || event.shiftKey || event.ctrlKey || event.metaKey) {
+      props.actions.toggleSelection(item.id, event.shiftKey); return;
+    }
+    const action = props.filters?.state === 'trash' ? props.actions.openResource : props.actions.open;
+    action(item, event.currentTarget);
+  };
   return <div data-list-identity="">
-    <button type="button" data-list-open="" disabled={disabled} aria-label={`打开 ${name}`} onClick={event => {
-      if (props.selectMode || event.shiftKey || event.ctrlKey || event.metaKey) {
-        props.actions.toggleSelection(item.id, event.shiftKey); return;
-      }
-      const open = props.filters?.state === 'trash' ? props.actions.openResource : props.actions.open;
-      open(item, event.currentTarget);
-    }}>
-      <span data-list-picture=""><MediaBadges item={item} compact />{artwork.html
-        ? <ArtSlot artwork={artwork} relayout={root => relayoutCovers(root, 'small')} /> : <span>无预览</span>}</span>
-      <span data-list-text=""><span data-list-name="" title={name}>{name}</span>
-        <span data-list-byline="">{who || '未归属'}<span data-list-mobile-metrics="">{fmtDur(item.duration)} · {fmtSize(item.size)}</span></span>
+    <div data-list-layout="">
+      <button type="button" data-list-open="" data-list-picture="" disabled={disabled} aria-label={`打开 ${name}`} onClick={open}>
+        <MediaBadges item={item} compact />{artwork.html
+          ? <ArtSlot artwork={artwork} relayout={root => relayoutCovers(root, 'small')} /> : <span>无预览</span>}</button>
+      <span data-list-text=""><button type="button" data-list-open="" data-list-name="" disabled={disabled} title={name} onClick={open}>{name}</button>
+        <span data-list-byline="">{item.performers?.length ? item.performers.map((actor, index) => <span key={`${actor}:${index}`}>
+          {index ? '、' : ''}<a href={entityPath('performer', actor, item.performer_entities?.[index]?.id)}
+            aria-disabled={disabled || undefined} onClick={event => {
+              event.preventDefault(); event.stopPropagation();
+              if (disabled) return;
+              if (props.selectMode || event.shiftKey || event.ctrlKey || event.metaKey) props.actions.toggleSelection(item.id, event.shiftKey);
+              else props.actions.openEntity('performer', actor);
+            }}>{actor}</a></span>) : who || '未归属'}<span data-list-mobile-metrics="">{fmtDur(item.duration)} · {fmtSize(item.size)}</span></span>
       </span>
-    </button>
+    </div>
   </div>;
 }

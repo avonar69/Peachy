@@ -12,6 +12,8 @@ Peachy is an independent fork of [Peach](https://github.com/peach-mitao/peach), 
 
 ## Peachy features
 
+Thumbnail view and list view share a sort dropdown and direction control. Actor names in cards and list rows open the actor's profile.
+
 Directory rules can assign each video's containing subfolder name as its actor, excluding videos directly in the selected parent. Reopening settings loads the saved rule. New rules enable inheritance for new files by default; saved choices are retained.
 
 Folder lists support selecting every video across pages. Directory rules can combine a studio, series and multiple actors, apply to subfolders, and carry those assignments to new files. Scene and folder saves close the editor immediately and show progress or errors in the background-task popup. Additional edits wait in submission order and start automatically; each edit has its own status and completion receipt.
@@ -189,7 +191,7 @@ Peachy 是基于 [Peach](https://github.com/peach-mitao/peach) 的独立分支�
 ## Peachy 功能
 
 - **多语言与局域网访问**：默认英文，提供简繁中文、越南语、日语、韩语、德语、西班牙语、法语及葡萄牙语；覆盖设置、任务、诊断与复核界面。支持显式开放局域网连接及普通 HTTP 环境。
-- **目录资料与批量编辑**：列表可跨页选择整个目录；目录规则组合厂牌、系列与多个演员，支持子目录及新文件继承。可按视频所在子目录名称关联演员，父目录直属视频不参与此项关联。打开设置读取已保存规则；新规则默认启用新文件继承，已保存选择保持原值。保存资料后关闭编辑窗口，任务浮层显示进度或错误。连续提交按顺序排队，逐项显示状态并自动开始下一项。
+- **目录资料与批量编辑**：卡片与列表共用排序下拉框和方向按钮，演员姓名可打开资料页。列表可跨页选择整个目录；目录规则组合厂牌、系列与多个演员，支持子目录及新文件继承。可按视频所在子目录名称关联演员，父目录直属视频不参与此项关联。打开设置读取已保存规则；新规则默认启用新文件继承，已保存选择保持原值。保存资料后关闭编辑窗口，任务浮层显示进度或错误。连续提交按顺序排队，逐项显示状态并自动开始下一项。
 - **StashDB 匹配与复核**：综合文件名、演员目录、厂牌、日期、时长及可选 OSHASH；支持忽略文本、可调门槛、已有分数快速匹配、近期视频重试及统一人工复核。演员、厂牌和作品可分别同步，手工修订受到保护。
 - **演员与厂牌资料**：同步演员照片、别名、生日、身高等资料及作品标签；提供演员合并、备份与撤销。资料页和名册显示个人平均星级与喜欢／不喜欢数量，未评分影片不计入均值。
 - **增量扫描与时间轴**：默认只处理新增视频；媒体目录支持独立扫描开关与周期，零小时关闭自动扫描。新增视频定向生成时间轴，提供间隔、速度、硬件解码及停止控制。

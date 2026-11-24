@@ -25,7 +25,7 @@ import { MediaBadges } from './media-badges';
 import {
   cardArtwork, cardIdentity, entityAvatar, performerLabel, relayoutCovers, releaseHover, wireHover,
 } from '@peach/card-art';
-import { esc, fmtDur, fmtSize } from '@peach/legacy/core';
+import { entityPath, esc, fmtDur, fmtSize } from '@peach/legacy/core';
 import { spinnerHtml } from '@peach/legacy/ui';
 
 import type { MediaCardActions, MediaCardHelpers, MediaCardLayout, MediaItem } from '../catalog-grid/types';
@@ -126,12 +126,12 @@ function identityParts(item: MediaItem): { avatar: ReactNode; who: ReactNode } {
   const who = coStarred
     ? (
       <>
-        <button type="button" data-media-who="" data-entity-kind="performer" data-entity-name={performer}><Icon name="user-round" /><span>{performer}</span></button>
+        <a href={entityPath('performer', performer, refs[0]?.id)} data-media-who="" data-entity-kind="performer" data-entity-name={performer}><Icon name="user-round" /><span>{performer}</span></a>
         <span data-media-who-more="">{`等 ${total} 人`}</span>
       </>
     )
     : kind
-      ? <button type="button" data-media-who="" data-entity-kind={kind} data-entity-name={name}><Icon name="user-round" /><span>{name}</span></button>
+      ? <a href={entityPath(kind, name, kind === 'performer' ? refs[0]?.id : item.creator_entity?.id)} data-media-who="" data-entity-kind={kind} data-entity-name={name}><Icon name="user-round" /><span>{name}</span></a>
       /* 没有署名人的那批是馆藏里的一类，点得开，和女优名、厂牌名一样。 */
       : <button type="button" data-media-who="" data-open-unowned=""><Icon name="user-round" /><span>{name}</span></button>;
   return { avatar, who };
@@ -221,6 +221,7 @@ function VideoCard({ item, variant, layout, selected, selectMode, seekSeconds, h
     if (target.closest('[data-open]')) { onOpen(item, el); return }
     const entity = target.closest<HTMLElement>('[data-entity-kind]');
     if (entity && el.contains(entity)) {
+      event.preventDefault();
       actions.openEntity(entity.dataset.entityKind || '', entity.dataset.entityName || '');
       return;
     }

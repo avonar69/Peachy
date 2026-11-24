@@ -18,6 +18,7 @@ import { spriteGlyph } from '../components/sprite-glyph';
 import { useViewGlide } from '../components/use-view-glide';
 import { useCatalogView } from '../catalog-grid/catalog-view';
 import { CatalogViewToggle } from '../catalog-grid/catalog-view-toggle';
+import { DataTableSort } from '../components/table-controls';
 import { sourceIcon } from '../follow-feed/follow-marks';
 import {
   videoOnly, type EntityComboItem, type EntityFilterActions, type EntityFilterHelpers, type EntityFilterProps, type EntityOnlineHead,
@@ -278,7 +279,7 @@ function VideoControls({ head, actions }: { head: EntityVideoHead; actions: Enti
         <Segments label="JAV 卡片版式" value={head.jav.layout} options={head.jav.options} onChange={actions.setJavLayout} />
       ) : null}
       <CatalogViewToggle />
-      {view === 'cards' ? <SortKeys sorts={head.sorts} onSort={actions.setSort} /> : null}
+      {view === 'cards' ? <VideoSort sorts={head.sorts} onSort={actions.setSort} /> : null}
     </span>
   );
 }
@@ -299,6 +300,14 @@ export function SortKeys({ sorts, onSort }: { sorts: readonly EntitySortKey[]; o
       })}
     </>
   );
+}
+
+/** 作品卡片与列表共用排序下拉框及方向按钮。 */
+export function VideoSort({ sorts, onSort }: { sorts: readonly EntitySortKey[]; onSort(key: string): void }) {
+  const current = sorts.find(sort => sort.pressed);
+  return <span data-video-sort=""><DataTableSort label="作品" options={sorts.map(sort => ({ id: sort.key, label: sort.label }))}
+    sorting={current ? [{ id: current.key, desc: current.dir !== 'asc' }] : []}
+    onChange={next => onSort(next[0]?.id || 'seed')} /></span>;
 }
 
 /** 在线视图的下排，同关注页：换一批，图片墙上多图片布局与「仅显示图片」，排序键排在最末。 */

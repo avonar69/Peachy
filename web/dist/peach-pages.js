@@ -9092,6 +9092,9 @@ var p = /* @__PURE__ */ o(((e) => {
 	}
 	n(), t.exports = y();
 })), x = /* @__PURE__ */ c(g(), 1), S = b(), C = {
+	作品排序: "Video sort",
+	作品改为升序: "Sort videos ascending",
+	作品改为降序: "Sort videos descending",
 	以视频所在子文件夹名称关联演员: "Set actors from each video's subfolder name",
 	"例如 Alex 子文件夹中的视频关联演员 Alex。当前目录直属视频不按目录名称关联演员，已有演员关联保留。": "Videos in the Alex subfolder get actor Alex. Videos directly in this folder keep their actors. Existing cast members are preserved.",
 	馆藏: "Library",

@@ -24,7 +24,7 @@ import { sidebarSkeletonHtml } from './../sidebar-skeleton';
 import { selectionState, setSelectMode } from './selection.js';
 import { manageHeaderSkeletonHtml, manageHeaderView } from './../manage-header';
 import { junkPath } from './../junk-queue';
-import { JAV_RELEASE_SORT, SORTS } from './../sort-preferences';
+import { CATALOG_SORT_OPTIONS } from './../sort-preferences';
 import { dropBars } from './../catalog-bars';
 import { entityState, pushEntityPage, syncPhotoWalls } from './entity.js';
 import { routeMetaOf } from './../history/route-meta';
@@ -241,9 +241,8 @@ export function javActive(){
   return false;
 }
 
-export function sortOptions(jav=javActive()){
-  const ordered=SORTS.filter(([key])=>key!=='seed');
-  return jav?[JAV_RELEASE_SORT,...ordered]:ordered;
+export function sortOptions(){
+  return CATALOG_SORT_OPTIONS.map(({id,label})=>[id,label]);
 }
 
 export function homeLayoutActive(){
