@@ -1,5 +1,7 @@
 # 复用清单
 
+javm 保留已校验的离线快照与提交锁；2026-11-24 公开仓库 API 及原始 README 返回 HTTP 404，当前维护状态未取得，更新检查由人工触发，不计作可用的在线参考。Atlas 的在线 README 与分支检查使用公开的 `main`，原快照及提交锁保留，内容变更仍需复核。
+
 作品卡片排序复用列表的 `DataTableSort` 与 BoardUI Select，选项由 `sort-preferences.ts` 的 `CATALOG_SORT_OPTIONS` 统一提供；实体资料链接复用 `entityPath` 和现有导航动作。未新增依赖、接口或数据表。
 
 前端测试的 DOM 环境固定为 Happy DOM 21.0.4（MIT），用于 Node 24 与 Vitest 5，不进入应用运行包。该版本覆盖 [GHSA-834v-8h66-3h79](https://github.com/advisories/GHSA-834v-8h66-3h79) 的修复；依赖审计与现有组件行为测试共同核验，无新增运行时依赖。

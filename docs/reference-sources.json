@@ -858,7 +858,8 @@
     },
     {
       "id": "readme-javm",
-      "cadence": "quarterly",
+      "cadence": "manual",
+      "availability": "2026-11-24：公开仓库 API 与原始 README 返回 HTTP 404，当前维护状态未取得；保留离线快照，恢复公开访问后人工复核。",
       "name": "javm 说明",
       "url": "https://raw.githubusercontent.com/ddmoyu/javm/main/README.md",
       "snapshot": "docs/reference-snapshots/upstream/readme-javm.md",
@@ -1022,13 +1023,13 @@
       "id": "readme-atlas",
       "cadence": "quarterly",
       "name": "Atlas 说明",
-      "url": "https://raw.githubusercontent.com/Zoroaaa/Atlas/v3/README.md",
+      "url": "https://raw.githubusercontent.com/Zoroaaa/Atlas/main/README.md",
       "snapshot": "docs/reference-snapshots/upstream/readme-atlas.md",
       "checked_on": "2026-10-13",
       "sha256": "2f002a235c8bd28848318bb3b55c79fe2812a504af6afc3709833ca65a7d7144",
       "git": {
         "repository": "https://github.com/Zoroaaa/Atlas.git",
-        "ref": "refs/heads/v3",
+          "ref": "refs/heads/main",
         "revision": "b1a3b518d87edc8052502401e747f7ec276cab22"
       },
       "role": "Atlas 的 `services/jav-utils.ts` `parseMagnets` 只解析 JavBus 一家，作待办第 43 条磁力取法的第二份证据；其余「磁力搜索」只是跳转链接。",
